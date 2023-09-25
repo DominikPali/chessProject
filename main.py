@@ -216,7 +216,7 @@ def on_drag_start(event):
             closest_item = piece_item
             item_tags = canvas.gettags(closest_item)
     if "piece" in item_tags:
-        drag_data['item'] = closest_item
+        drag_data["item"] = closest_item
         drag_data["x"] = event.x
         drag_data["y"] = event.y
         drag_data["startX"], drag_data["startY"] = return_top_left_tip_of_the_square(event.x, event.y)
