@@ -58,10 +58,10 @@ def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, start
     else:
         canvas.itemconfig(piece_items_in_canvas[startX - 1][startY - 1], text=" ", font=('Arial', int(square_size / 2)),
                           tags=(x, y))
-        pieces_on_the_board_objects[startX - 1][startY - 1].x = x
-        pieces_on_the_board_objects[startX - 1][startY - 1].y = y
+        pieces_on_the_board_objects[startX - 1][startY - 1].x_L = x
+        pieces_on_the_board_objects[startX - 1][startY - 1].y_N = y
         pieces_on_the_board_objects[x-1][y-1] = pieces_on_the_board_objects[startX-1][startY-1]
-        pieces_on_the_board[x - 1][y - 1] = None
+        pieces_on_the_board[startX - 1][startY - 1] = None
 
 
 class Pawn():
@@ -94,9 +94,9 @@ class Pawn():
                         add_to_list_of_possible_moves(self.x_L, self.y_N, 1, 1)
 
             elif self.color == "black":
-                if pieces_on_the_board[self.x_L + 0 - 1][self.y_N -1 - 1] is None:
+                if pieces_on_the_board[self.x_L + 0 - 1][self.y_N - 1 - 1] is None:
                     if self.y_N == 7:
-                        if pieces_on_the_board[self.x_L + 0 - 1][self.y_N -2 - 1] is None:
+                        if pieces_on_the_board[self.x_L + 0 - 1][self.y_N - 2 - 1] is None:
                             add_to_list_of_possible_moves(self.x_L, self.y_N, 0, -2)
                     add_to_list_of_possible_moves(self.x_L, self.y_N, 0, -1)
                 if pieces_on_the_board[self.x_L - 1 - 1][self.y_N - 1 - 1] is not None:
@@ -298,6 +298,7 @@ def on_drag_stop(event):
     print(str(startX) + "  is startX")
     print(str(startY) + "  is startY")
     pieces_on_the_board_objects[startX-1][startY-1].define_possible_moves()
+    print(str(pieces_on_the_board_objects[startX-1][startY-1].y_N) + "  is   y")
     for tuple in pieces_on_the_board_objects[startX-1][startY-1].possible_moves:
         deltaX, deltaY = tuple
         print(str(deltaX) + " is deltaX    " + str(deltaY) + " is deltaY")
