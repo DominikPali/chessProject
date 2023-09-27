@@ -6,7 +6,7 @@ piece_items_in_canvas = [[None for _ in range(8)] for _ in range(8)]
 square_items_in_canvas = [[None for _ in range(8)] for _ in range(8)]
 square_size = 40
 drag_data = {"item":None, "x":None, "y":None, "startX":None, "startY":None}
-x=10
+x=23
 
 def return_name_color_of_the_piece(piece_symbol):
     if piece_symbol == "0x265A": return "blackKing"
