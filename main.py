@@ -7,6 +7,7 @@ square_items_in_canvas = [[None for _ in range(8)] for _ in range(8)]
 pieces_on_the_board = [[None for _ in range(8)] for _ in range(8)]
 square_size = 40
 drag_data = {"item":None, "x":None, "y":None, "startX":None, "startY":None}
+kings_delta_x_y = [(0, 1),(1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
 
 def add_to_list_of_possible_moves(x,y, deltaX, deltaY):
     for i in range(8):
@@ -59,7 +60,6 @@ def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, start
         pieces_on_the_board_objects[x-1][y-1].x_L = x
         pieces_on_the_board_objects[x-1][y-1].y_N = y
         pieces_on_the_board_objects[startX - 1][startY - 1] = None
-        pieces_on_the_board[startX-1][startY-1] = None
 class Pawn():
     def __init__(self, color, x_L, y_N):
         self.color = color
@@ -108,6 +108,7 @@ class Bishop():
         self.color = color
         self.x_L = x_L
         self.y_N = y_N
+        self.possible_moves = []
         if color == "white":
             self.symbol = chr(0x2657)
         else:
@@ -119,6 +120,7 @@ class Knight():
         self.color = color
         self.x_L = x_L
         self.y_N = y_N
+        self.possible_moves = []
         if color == "white":
             self.symbol = chr(0x2658)
         else:
@@ -130,6 +132,7 @@ class Rook():
         self.color = color
         self.x_L = x_L
         self.y_N = y_N
+        self.possible_moves = []
         if color == "white":
             self.symbol = chr(0x2656)
         else:
@@ -141,6 +144,7 @@ class Queen():
         self.color = color
         self.x_L = x_L
         self.y_N = y_N
+        self.possible_moves = []
         if color == "white":
             self.symbol = chr(0x2655)
         else:
@@ -152,11 +156,26 @@ class King():
         self.color = color
         self.x_L = x_L
         self.y_N = y_N
+        self.possible_moves = []
         if color == "white":
             self.symbol = chr(0x2654)
         else:
             self.symbol = chr(0x265A)
         change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color)
+
+    def define_possible_moves(self):
+        try:
+            for tuple in kings_delta_x_y:
+                deltaX, deltaY = tuple
+                if (pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None
+                    or pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None
+                    and pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color):
+                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY)
+        except IndexError:
+            pass
+
+
+
 
 def start_function():
     for i in range(8):
@@ -250,15 +269,9 @@ def create_chess_board():
             piece_items_in_canvas[i][7-j] = piece_item
 def on_drag_start(event):
     global drag_data
-    closest_item = canvas.find_closest(event.x, event.y)[0]
+    row, col = return_x_y_of_the_square(event.x, event.y)
+    closest_item = piece_items_in_canvas[row-1][col-1]
     item_tags = canvas.gettags(closest_item)
-    if "square" in item_tags:
-        col = (event.x - square_size) // square_size
-        row = 7 - (event.y - square_size) // square_size
-        piece_item = piece_items_in_canvas[col + 1][8 - row]
-        if piece_item:
-            closest_item = piece_item
-            item_tags = canvas.gettags(closest_item)
     if "piece" in item_tags:
         drag_data["item"] = closest_item
         drag_data["x"] = event.x
@@ -290,24 +303,17 @@ def on_drag_stop(event):
         deltaX, deltaY = tuple
         print(str(deltaX) + " is deltaX    " + str(deltaY) + " is deltaY")
         if x == startX + deltaX and y == startY + deltaY:
-            change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX-1][startY-1].symbol, False,
-                                       startX, startY, pieces_on_the_board_objects[startX-1][startY-1].color)
+            print(pieces_on_the_board_objects[startX-1][startY-1])
+            print("piece object")
+            if x != startX or y !=startY:
+                change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX-1][startY-1].symbol, False,
+                                           startX, startY, pieces_on_the_board_objects[startX-1][startY-1].color)
+                pieces_on_the_board_objects[x - 1][y - 1].possible_moves = []
     canvas.tag_raise(drag_data["item"])
-    try:
-        pieces_on_the_board_objects[x - 1][y - 1].possible_moves = []
-    except AttributeError:
-        pass
     drag_data = {"item": None, "x" : None, "y" : None, "startX" : None, "startY" : None}
 
 canvas = Canvas(boardLabels, height=square_size*9)
 canvas.pack()
-
-def test():
-    print(pieces_on_the_board[1][4])
-    print(pieces_on_the_board_objects[1][4].color)
-
-button = Button(window, text="test", command=test)
-button.pack()
 
 create_chess_board()
 start_function()
