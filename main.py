@@ -26,7 +26,6 @@ def return_name_color_of_the_piece(piece_symbol):
     if piece_symbol == "0x2657": return "whiteBishop"
     if piece_symbol == "0x2658": return "whiteKnight"
     if piece_symbol == "0x2659": return "whitePawn"
-
 def return_top_left_tip_of_the_square(x,y):
     right_x = 0
     right_y = 0
@@ -43,8 +42,6 @@ def return_x_y_of_the_square(x_coordinates, y_coordinates):
     for j in range(9):
         if j * square_size <= y_coordinates < j * square_size + square_size: y = 9-j
     return x, y
-
-
 def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, startY, color):
     global pieces_on_the_board
     piece_name = return_name_color_of_the_piece(piece_symbol)
@@ -58,12 +55,11 @@ def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, start
     else:
         canvas.itemconfig(piece_items_in_canvas[startX - 1][startY - 1], text=" ", font=('Arial', int(square_size / 2)),
                           tags=(x, y))
-        pieces_on_the_board_objects[startX - 1][startY - 1].x_L = x
-        pieces_on_the_board_objects[startX - 1][startY - 1].y_N = y
         pieces_on_the_board_objects[x-1][y-1] = pieces_on_the_board_objects[startX-1][startY-1]
-        pieces_on_the_board[startX - 1][startY - 1] = None
-
-
+        pieces_on_the_board_objects[x-1][y-1].x_L = x
+        pieces_on_the_board_objects[x-1][y-1].y_N = y
+        pieces_on_the_board_objects[startX - 1][startY - 1] = None
+        pieces_on_the_board[startX-1][startY-1] = None
 class Pawn():
     def __init__(self, color, x_L, y_N):
         self.color = color
@@ -79,33 +75,29 @@ class Pawn():
     def define_possible_moves(self):
         try:
             if self.color == "white":
-                if pieces_on_the_board[self.x_L + 0 - 1][self.y_N + 1 - 1] is None:
-                    if self.y_N == 2:
-                        if pieces_on_the_board[self.x_L + 0 - 1][self.y_N + 2 - 1] is None:
-                            add_to_list_of_possible_moves(self.x_L, self.y_N, 0, 2)
+                if pieces_on_the_board_objects[self.x_L + 0 - 1][self.y_N + 1 - 1] is None:
                     add_to_list_of_possible_moves(self.x_L, self.y_N, 0, 1)
-                if pieces_on_the_board[self.x_L - 1 - 1][self.y_N + 1 - 1] is not None:
-                    item_tags = canvas.gettags(piece_items_in_canvas[self.x_L - 1 - 1][self.y_N + 1 - 1])
-                    if "black" in item_tags:
+                    if self.y_N == 2:
+                        if pieces_on_the_board_objects[self.x_L + 0 - 1][self.y_N + 2 - 1] is None:
+                            add_to_list_of_possible_moves(self.x_L, self.y_N, 0, 2)
+                if pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N + 1 - 1] is not None:
+                    if pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N + 1 - 1].color == "black":
                         add_to_list_of_possible_moves(self.x_L, self.y_N, -1, 1)
-                if pieces_on_the_board[self.x_L + 1 - 1][self.y_N + 1 - 1] is not None:
-                    item_tags = canvas.gettags(piece_items_in_canvas[self.x_L + 1 - 1][self.y_N + 1 - 1])
-                    if "black" in item_tags:
+                if pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N + 1 - 1] is not None:
+                    if pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N + 1 - 1].color == "black":
                         add_to_list_of_possible_moves(self.x_L, self.y_N, 1, 1)
 
             elif self.color == "black":
-                if pieces_on_the_board[self.x_L + 0 - 1][self.y_N - 1 - 1] is None:
-                    if self.y_N == 7:
-                        if pieces_on_the_board[self.x_L + 0 - 1][self.y_N - 2 - 1] is None:
-                            add_to_list_of_possible_moves(self.x_L, self.y_N, 0, -2)
+                if pieces_on_the_board_objects[self.x_L + 0 - 1][self.y_N - 1 - 1] is None:
                     add_to_list_of_possible_moves(self.x_L, self.y_N, 0, -1)
-                if pieces_on_the_board[self.x_L - 1 - 1][self.y_N - 1 - 1] is not None:
-                    item_tags = canvas.gettags(piece_items_in_canvas[self.x_L - 1 - 1][self.y_N - 1 - 1])
-                    if "white" in item_tags:
+                    if self.y_N == 7:
+                        if pieces_on_the_board_objects[self.x_L + 0 - 1][self.y_N - 2 - 1] is None:
+                            add_to_list_of_possible_moves(self.x_L, self.y_N, 0, -2)
+                if pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N - 1 - 1] is not None:
+                    if pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N - 1 - 1].color == "white":
                         add_to_list_of_possible_moves(self.x_L, self.y_N, -1, -1)
-                if pieces_on_the_board[self.x_L + 1 - 1][self.y_N - 1 - 1] is not None:
-                    item_tags = canvas.gettags(piece_items_in_canvas[self.x_L + 1 - 1][self.y_N - 1 - 1])
-                    if "white" in item_tags:
+                if pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N - 1 - 1] is not None:
+                    if pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N - 1 - 1].color == "white":
                         add_to_list_of_possible_moves(self.x_L, self.y_N, 1, -1)
         except IndexError:
             pass
@@ -171,7 +163,7 @@ def start_function():
         pawnW = Pawn("white",i+1, 2)
         pieces_on_the_board_objects[i][1] = pawnW
         pawnB = Pawn("black", i+1, 7)
-        pieces_on_the_board_objects[i][7] = pawnB
+        pieces_on_the_board_objects[i][6] = pawnB
     rookW1 = Rook("white",1,1)
     pieces_on_the_board_objects[0][0] = rookW1
     rookW2 = Rook("white", 8, 1)
@@ -191,7 +183,7 @@ def start_function():
     pieces_on_the_board_objects[6][7] = knightB2
 
     bishopW1 = Bishop("white",3,1)
-    pieces_on_the_board_objects[3][0] = bishopW1
+    pieces_on_the_board_objects[2][0] = bishopW1
     bishopW2 = Bishop("white", 6, 1)
     pieces_on_the_board_objects[5][0] = bishopW2
     bishopB1 = Bishop("black", 3, 8)
@@ -274,11 +266,7 @@ def on_drag_start(event):
         drag_data["startX"], drag_data["startY"] = return_top_left_tip_of_the_square(event.x, event.y)
         drag_data["startX"] += square_size/2
         drag_data["startY"] += square_size/2
-
     canvas.tag_raise(closest_item)
-    print("x value: " + str(event.x))
-    print("y value: " + str(event.y))
-    print(return_x_y_of_the_square(event.x, event.y))
 
 def on_drag_motion(event):
     if drag_data["item"]:
@@ -298,18 +286,28 @@ def on_drag_stop(event):
     print(str(startX) + "  is startX")
     print(str(startY) + "  is startY")
     pieces_on_the_board_objects[startX-1][startY-1].define_possible_moves()
-    print(str(pieces_on_the_board_objects[startX-1][startY-1].y_N) + "  is   y")
     for tuple in pieces_on_the_board_objects[startX-1][startY-1].possible_moves:
         deltaX, deltaY = tuple
         print(str(deltaX) + " is deltaX    " + str(deltaY) + " is deltaY")
         if x == startX + deltaX and y == startY + deltaY:
-            change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX-1][startY-1].piece_id, False,
+            change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX-1][startY-1].symbol, False,
                                        startX, startY, pieces_on_the_board_objects[startX-1][startY-1].color)
     canvas.tag_raise(drag_data["item"])
+    try:
+        pieces_on_the_board_objects[x - 1][y - 1].possible_moves = []
+    except AttributeError:
+        pass
     drag_data = {"item": None, "x" : None, "y" : None, "startX" : None, "startY" : None}
 
 canvas = Canvas(boardLabels, height=square_size*9)
 canvas.pack()
+
+def test():
+    print(pieces_on_the_board[1][4])
+    print(pieces_on_the_board_objects[1][4].color)
+
+button = Button(window, text="test", command=test)
+button.pack()
 
 create_chess_board()
 start_function()
