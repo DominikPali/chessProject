@@ -292,24 +292,25 @@ def on_drag_motion(event):
 def on_drag_stop(event):
     global drag_data
     canvas.coords(drag_data["item"], drag_data["startX"], drag_data["startY"])
+    change_piece = False
     x, y = return_x_y_of_the_square(drag_data["x"], drag_data["y"])
     print(str(x) + "  is x")
     print(str(y) + "  is y")
     startX, startY = return_x_y_of_the_square(drag_data["startX"], drag_data["startY"])
     print(str(startX) + "  is startX")
     print(str(startY) + "  is startY")
-    pieces_on_the_board_objects[startX-1][startY-1].define_possible_moves()
-    for tuple in pieces_on_the_board_objects[startX-1][startY-1].possible_moves:
-        deltaX, deltaY = tuple
-        print(str(deltaX) + " is deltaX    " + str(deltaY) + " is deltaY")
-        if x == startX + deltaX and y == startY + deltaY:
-            print(pieces_on_the_board_objects[startX-1][startY-1])
-            print("piece object")
-            if x != startX or y !=startY:
-                change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX-1][startY-1].symbol, False,
-                                           startX, startY, pieces_on_the_board_objects[startX-1][startY-1].color)
-                pieces_on_the_board_objects[x - 1][y - 1].possible_moves = []
-    canvas.tag_raise(drag_data["item"])
+    if x != startX or y != startY:
+        pieces_on_the_board_objects[startX-1][startY-1].define_possible_moves()
+        for tuple in pieces_on_the_board_objects[startX-1][startY-1].possible_moves:
+            deltaX, deltaY = tuple
+            print(str(deltaX) + " is deltaX    " + str(deltaY) + " is deltaY")
+            if x == startX + deltaX and y == startY + deltaY:
+                change_piece = True
+    if change_piece:
+        change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX-1][startY-1].symbol, False,
+                                startX, startY, pieces_on_the_board_objects[startX-1][startY-1].color)
+        pieces_on_the_board_objects[x - 1][y - 1].possible_moves = []
+        canvas.tag_raise(piece_items_in_canvas[x-1][y-1])
     drag_data = {"item": None, "x" : None, "y" : None, "startX" : None, "startY" : None}
 
 canvas = Canvas(boardLabels, height=square_size*9)
