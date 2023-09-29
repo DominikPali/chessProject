@@ -10,10 +10,13 @@ drag_data = {"item":None, "x":None, "y":None, "startX":None, "startY":None}
 kings_delta_x_y = [(0, 1),(1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
 
 def add_to_list_of_possible_moves(x,y, deltaX, deltaY):
+    move_found = False
     for i in range(8):
         for j in range(8):
             if x + deltaX == i + 1 and y + deltaY == j + 1:
-                pieces_on_the_board_objects[x-1][y-1].possible_moves.append((deltaX, deltaY))
+                move_found = True
+    if move_found:
+        pieces_on_the_board_objects[x - 1][y - 1].possible_moves.append((deltaX, deltaY))
 def return_name_color_of_the_piece(piece_symbol):
     if piece_symbol == "0x265A": return "blackKing"
     if piece_symbol == "0x265B": return "blackQueen"
@@ -171,6 +174,7 @@ class King():
                     or pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None
                     and pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color):
                     add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY)
+
         except IndexError:
             pass
 
