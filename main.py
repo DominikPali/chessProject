@@ -18,14 +18,40 @@ pieces_diagonal_y_plus_x_minus = [(-1, 1), (-2, 2), (-3, 3), (-4, 4), (-5, 5), (
 pieces_diagonal_y_minus_x_minus = [(-1, -1), (-2, -2), (-3, -3), (-4, -4), (-5, -5), (-6, -6), (-7, -7)]
 kings_delta_x_y = [(0, 1),(1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
 knight_delta_x_y= [(2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (1, 2), (-1, 2)]
+squares_attacked_by_white_pieces = [[False for _ in range(8)] for _ in range(8)]
+squares_attacked_by_black_pieces = [[False for _ in range(8)] for _ in range(8)]
 
-def add_to_list_of_possible_moves(x,y, deltaX, deltaY, attacked_squares):
+
+def add_to_list_of_possible_moves_and_attacked_squares(x,y, deltaX, deltaY):
+    global squares_attacked_by_white_pieces
+    global squares_attacked_by_black_pieces
     if 0 < x + deltaX < 9 and 0 < y + deltaY < 9:
-        if not attacked_squares:
-            pieces_on_the_board_objects[x - 1][y - 1].possible_moves.append((deltaX, deltaY))
-        elif attacked_squares:
-            pieces_on_the_board_objects[x - 1][y - 1].attacked_squares.append((pieces_on_the_board_objects
-            [x - 1][y - 1].x_L + deltaX - 1, pieces_on_the_board_objects[x - 1][y - 1].y_N + deltaY - 1))
+        pieces_on_the_board_objects[x - 1][y - 1].possible_moves.append((deltaX, deltaY))
+        if pieces_on_the_board_objects[x - 1][y - 1].color == "white":
+            if pieces_on_the_board_objects[x - 1][y - 1].type == "Pawn":
+                if deltaX == 0:
+                    pass
+                elif deltaX != 0:
+                    squares_attacked_by_white_pieces[x + deltaX - 1][y + deltaY - 1] = True
+            else:
+                squares_attacked_by_white_pieces[x + deltaX - 1][y + deltaY - 1] = True
+        elif pieces_on_the_board_objects[x - 1][y - 1].color == "black":
+            if pieces_on_the_board_objects[x - 1][y - 1].type == "Pawn":
+                if deltaX == 0:
+                    pass
+                elif deltaX != 0:
+                    squares_attacked_by_black_pieces[x + deltaX - 1][y + deltaY - 1] = True
+            else:
+                squares_attacked_by_black_pieces[x + deltaX - 1][y + deltaY - 1] = True
+def add_to_attacked_squares_only(x,y, deltaX, deltaY):
+    global squares_attacked_by_white_pieces
+    global squares_attacked_by_black_pieces
+    if 0 < x + deltaX < 9 and 0 < y + deltaY < 9:
+        if pieces_on_the_board_objects[x - 1][y - 1].color == "white":
+            squares_attacked_by_white_pieces[x + deltaX - 1][y + deltaY - 1] = True
+        elif pieces_on_the_board_objects[x - 1][y - 1].color == "black":
+            squares_attacked_by_black_pieces[x + deltaX - 1][y + deltaY - 1] = True
+    
 def return_name_color_of_the_piece(piece_symbol):
     if piece_symbol == "0x265A": return "blackKing"
     if piece_symbol == "0x265B": return "blackQueen"
@@ -84,7 +110,6 @@ class Pawn():
         self.piece_id = piece_items_in_canvas[x_L - 1][y_N - 1]
         self.possible_moves = []
         self.type = "Pawn"
-        self.attacked_squares = []
         if self.color == "white":
             self.symbol = chr(0x2659)
             white_pieces.append(self)
@@ -92,46 +117,40 @@ class Pawn():
             self.symbol = chr(0x265F)
             black_pieces.append(self)
         change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color)
-    def define_possible_moves(self, attacked_squares):
+    def define_possible_moves(self):
         self.possible_moves = []
         try:
-            if not attacked_squares:
-                if self.color == "white":
-                    if pieces_on_the_board_objects[self.x_L + 0 - 1][self.y_N + 1 - 1] is None:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, 0, 1, False)
-                        if self.y_N == 2:
-                            if pieces_on_the_board_objects[self.x_L + 0 - 1][self.y_N + 2 - 1] is None:
-                                add_to_list_of_possible_moves(self.x_L, self.y_N, 0, 2, False)
-                    if pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N + 1 - 1] is not None:
-                        if pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N + 1 - 1].color == "black":
-                            add_to_list_of_possible_moves(self.x_L, self.y_N, -1, 1, False)
-                    if pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N + 1 - 1] is not None:
-                        if pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N + 1 - 1].color == "black":
-                            add_to_list_of_possible_moves(self.x_L, self.y_N, 1, 1, False)
+            if self.color == "white":
+                if pieces_on_the_board_objects[self.x_L + 0 - 1][self.y_N + 1 - 1] is None:
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, 0, 1)
+                    if self.y_N == 2:
+                        if pieces_on_the_board_objects[self.x_L + 0 - 1][self.y_N + 2 - 1] is None:
+                            add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, 0, 2)
+                if (pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N + 1 - 1] is not None
+                    and pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N + 1 - 1].color != self.color):
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, -1, 1)
+                add_to_attacked_squares_only(self.x_L, self.y_N, -1, 1)
+                if (pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N + 1 - 1] is not None
+                    and pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N + 1 - 1].color != self.color):
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, 1, 1)
+                add_to_attacked_squares_only(self.x_L, self.y_N, 1, 1)
     
-                elif self.color == "black":
-                    if pieces_on_the_board_objects[self.x_L + 0 - 1][self.y_N - 1 - 1] is None:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, 0, -1, False)
-                        if self.y_N == 7:
-                            if pieces_on_the_board_objects[self.x_L + 0 - 1][self.y_N - 2 - 1] is None:
-                                add_to_list_of_possible_moves(self.x_L, self.y_N, 0, -2, False)
-                    if pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N - 1 - 1] is not None:
-                        if pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N - 1 - 1].color == "white":
-                            add_to_list_of_possible_moves(self.x_L, self.y_N, -1, -1, False)
-                    if pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N - 1 - 1] is not None:
-                        if pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N - 1 - 1].color == "white":
-                            add_to_list_of_possible_moves(self.x_L, self.y_N, 1, -1, False)
-            elif attacked_squares:
-                if self.color == "white":
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, 1, 1, True)
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, -1, 1, True)
-                elif self.color == "black":
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, 1, -1, True)
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, -1, -1, True)
+            elif self.color == "black":
+                if pieces_on_the_board_objects[self.x_L + 0 - 1][self.y_N - 1 - 1] is None:
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, 0, - 1)
+                    if self.y_N == 7:
+                        if pieces_on_the_board_objects[self.x_L + 0 - 1][self.y_N - 2 - 1] is None:
+                            add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, 0, - 2)
+                if (pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N - 1 - 1] is not None
+                    and pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N - 1 - 1].color != self.color):
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, -1, -1)
+                add_to_attacked_squares_only(self.x_L, self.y_N, -1, -1)
+                if (pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N - 1 - 1] is not None
+                    and pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N - 1 - 1].color != self.color):
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, 1, -1)
+                add_to_attacked_squares_only(self.x_L, self.y_N, 1, -1)
         except IndexError:
-            pass    
-    def define_attacked_squares(self):
-        self.define_possible_moves(True)
+            pass
 class Bishop():
     def __init__(self, color, x_L, y_N):
         self.color = color
@@ -139,7 +158,6 @@ class Bishop():
         self.y_N = y_N
         self.possible_moves = []
         self.type = "Bishop"
-        self.attacked_squares = []
         if color == "white":
             self.symbol = chr(0x2657)
             white_pieces.append(self)
@@ -147,17 +165,18 @@ class Bishop():
             self.symbol = chr(0x265D)
             black_pieces.append(self)
         change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color)
-    def define_possible_moves(self, attacked_squares):
+    def define_possible_moves(self):
+        self.possible_moves = []
         for tuple in pieces_diagonal_y_minus_x_minus:
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -167,12 +186,12 @@ class Bishop():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -182,12 +201,12 @@ class Bishop():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -197,19 +216,17 @@ class Bishop():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
             except IndexError:
                 pass
-    def define_attacked_squares(self):
-        self.define_possible_moves(True)
 class Knight():
     def __init__(self, color, x_L, y_N):
         self.color = color
@@ -217,7 +234,6 @@ class Knight():
         self.y_N = y_N
         self.possible_moves = []
         self.type = "Knight"
-        self.attacked_squares = []
         if color == "white":
             self.symbol = chr(0x2658)
             white_pieces.append(self)
@@ -225,21 +241,20 @@ class Knight():
             self.symbol = chr(0x265E)
             black_pieces.append(self)
         change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color)
-    def define_possible_moves(self, attacked_squares):
+    def define_possible_moves(self):
+        self.possible_moves = []
         for tuple in knight_delta_x_y:
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
             except IndexError:
                 pass
-    def define_attacked_squares(self):
-        self.define_possible_moves(True)
 class Rook():
     def __init__(self, color, x_L, y_N):
         self.color = color
@@ -247,7 +262,6 @@ class Rook():
         self.y_N = y_N
         self.possible_moves = []
         self.type = "Rook"
-        self.attacked_squares = []
         if color == "white":
             self.symbol = chr(0x2656)
             white_pieces.append(self)
@@ -255,17 +269,18 @@ class Rook():
             self.symbol = chr(0x265C)
             black_pieces.append(self)
         change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color)
-    def define_possible_moves(self, attacked_squares):
+    def define_possible_moves(self):
+        self.possible_moves = []
         for tuple in pieces_vertical_y_plus:
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -275,12 +290,12 @@ class Rook():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -290,12 +305,12 @@ class Rook():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -305,26 +320,23 @@ class Rook():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
             except IndexError:
                 pass
-    def define_attacked_squares(self):
-        self.define_possible_moves(True)
 class Queen():
     def __init__(self, color, x_L, y_N):
         self.color = color
         self.x_L = x_L
         self.y_N = y_N
         self.possible_moves = []
-        self.attacked_squares = []
         self.type = "Queen"
         if color == "white":
             self.symbol = chr(0x2655)
@@ -333,17 +345,19 @@ class Queen():
             self.symbol = chr(0x265B)
             black_pieces.append(self)
         change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color)
-    def define_possible_moves(self, attacked_squares):
+    def define_possible_moves(self):
+        self.possible_moves = []
+        self.possible_moves = []
         for tuple in pieces_vertical_y_plus:
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -353,12 +367,10 @@ class Queen():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
-                    elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -368,12 +380,10 @@ class Queen():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
-                    elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -383,12 +393,10 @@ class Queen():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
-                    elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -398,12 +406,10 @@ class Queen():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
-                    elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -413,12 +419,10 @@ class Queen():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
-                    elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -428,12 +432,10 @@ class Queen():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
-                    elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
@@ -443,28 +445,22 @@ class Queen():
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
+                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, attacked_squares)
-                    elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     break
                 else:
                     break
             except IndexError:
                 pass
-    def define_attacked_squares(self):
-        self.define_possible_moves(True)
 class King():
     def __init__(self, color, x_L, y_N):
         self.color = color
         self.x_L = x_L
         self.y_N = y_N
-        self.possible_moves = []
-        self.squares_attacked_by_other_pieces = [[False for _ in range(8)] for _ in range(8)]
-        self.attacked_squares = []
         self.type = "King"
+        self.possible_moves = []
         if color == "white":
             self.symbol = chr(0x2654)
             white_pieces.append(self)
@@ -472,24 +468,25 @@ class King():
             self.symbol = chr(0x265A)
             black_pieces.append(self)
         change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color)
-    def define_possible_moves(self, attacked_squares):
+    def define_possible_moves(self):
+        self.possible_moves = []
         for tuple in kings_delta_x_y:
             deltaX, deltaY = tuple
             try:
                 if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is None:
-                    add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
-                    if not self.squares_attacked_by_other_pieces[self.x_L + deltaX - 1][self.y_N + deltaY - 1]:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, False)
+                    add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
+                    if (self.color == "white" and squares_attacked_by_black_pieces[self.x_L + deltaX - 1][self.y_N + deltaY - 1] == False
+                        or self.color == "black" and squares_attacked_by_white_pieces[self.x_L + deltaX - 1][self.y_N + deltaY - 1] == False):
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                 elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1] is not None:
                     if pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color != self.color:
-                        if not self.squares_attacked_by_other_pieces[self.x_L + deltaX - 1][self.y_N + deltaY - 1]:
-                            add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, False)
+                        if (self.color == "white" and squares_attacked_by_black_pieces[self.x_L + deltaX - 1][self.y_N + deltaY - 1] == False
+                            or self.color == "black" and squares_attacked_by_white_pieces[self.x_L + deltaX - 1][self.y_N + deltaY - 1] == False):
+                            add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, deltaX, deltaY)
                     elif pieces_on_the_board_objects[self.x_L + deltaX - 1][self.y_N + deltaY - 1].color == self.color:
-                        add_to_list_of_possible_moves(self.x_L, self.y_N, deltaX, deltaY, True)
+                        add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
             except IndexError:
                 pass
-    def define_attacked_squares(self):
-        self.define_possible_moves(True)
 def start_function():
     for i in range(8):
         pawnW = Pawn("white",i+1, 2)
@@ -600,32 +597,21 @@ def on_drag_motion(event):
     canvas.tag_raise(drag_data["item"])
 def on_drag_stop(event):
     global drag_data
+    global squares_attacked_by_black_pieces
+    global squares_attacked_by_white_pieces
     canvas.coords(drag_data["item"], drag_data["startX"], drag_data["startY"])
     change_piece = False
     x, y = return_x_y_of_the_square(drag_data["x"], drag_data["y"])
-    print(str(x) + "  is x")
-    print(str(y) + "  is y")
     startX, startY = return_x_y_of_the_square(drag_data["startX"], drag_data["startY"])
-    print(str(startX) + "  is startX")
-    print(str(startY) + "  is startY")
-
     if pieces_on_the_board_objects[startX-1][startY-1].type == "King":
         if pieces_on_the_board_objects[startX-1][startY-1].color == "white":
             for object in black_pieces:
-                object.define_attacked_squares()
-                for tuple in object.attacked_squares:
-                    squareX, squareY = tuple
-                    pieces_on_the_board_objects[startX - 1][startY - 1].squares_attacked_by_other_pieces[squareX][squareY] = True
+                object.define_possible_moves()
         elif pieces_on_the_board_objects[startX-1][startY-1].color == "black":
-            for object2 in white_pieces:
-                object2.define_attacked_squares()
-                for tuple in object2.attacked_squares:
-                    squareX, squareY = tuple
-                    pieces_on_the_board_objects[startX - 1][startY - 1].squares_attacked_by_other_pieces[squareX][squareY] = True
+            for object in white_pieces:
+                object.define_possible_moves()
     if x != startX or y != startY:
-        pieces_on_the_board_objects[startX-1][startY-1].define_possible_moves(False)
-        if pieces_on_the_board_objects[startX-1][startY-1].type == "King":
-            pieces_on_the_board_objects[startX - 1][startY - 1].attacked_squares
+        pieces_on_the_board_objects[startX-1][startY-1].define_possible_moves()
         for tuple in pieces_on_the_board_objects[startX-1][startY-1].possible_moves:
             deltaX, deltaY = tuple
             if x == startX + deltaX and y == startY + deltaY:
@@ -633,16 +619,14 @@ def on_drag_stop(event):
     if change_piece:
         change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX-1][startY-1].symbol, False,
                                 startX, startY, pieces_on_the_board_objects[startX-1][startY-1].color)
-        pieces_on_the_board_objects[x - 1][y - 1].possible_moves = []
         canvas.tag_raise(piece_items_in_canvas[x-1][y-1])
+    squares_attacked_by_white_pieces = [[False for _ in range(8)] for _ in range(8)]
+    squares_attacked_by_black_pieces = [[False for _ in range(8)] for _ in range(8)]
 
     drag_data = {"item": None, "x" : None, "y" : None, "startX" : None, "startY" : None}
 
 canvas = Canvas(boardLabels, height=square_size*9)
 canvas.pack()
-
-
-
 create_chess_board()
 start_function()
 window.mainloop()
