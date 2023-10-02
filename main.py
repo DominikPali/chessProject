@@ -19,7 +19,7 @@ def return_name_color_of_the_piece(piece_symbol):
     if piece_symbol == "0x2656": return "whiteRook"
     if piece_symbol == "0x2657": return "whiteBishop"
     if piece_symbol == "0x2658": return "whiteKnight"
-    if piece_symbol == "0x2659": return "whitePawn"
+    if piece_symbol == '0x2659': return "whitePawn"
 
 def return_top_left_tip_of_the_square(x,y):
     right_x = 0
