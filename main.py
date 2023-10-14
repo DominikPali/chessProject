@@ -81,7 +81,7 @@ def return_x_y_of_the_square(x_coordinates, y_coordinates):
     for j in range(9):
         if j * square_size <= y_coordinates < j * square_size + square_size: y = 9-j
     return x, y
-def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, startY, color, enPassant):
+def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, startY, color, enPassant, castling):
     print("change_piece")
     global pieces_on_the_board
     global previous_moves
@@ -124,6 +124,32 @@ def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, start
                                        "typeOfTheMovedPiece": pieces_on_the_board_objects[startX - 1][
                                            startY - 1].type,
                                        "capturedPieceType": "Pawn"})
+            if castling == True:
+                if color == "white": rook_symbol = chr(0x2656)
+                elif color == "black": rook_symbol = chr(0x265C)
+                if (2, 0) in pieces_on_the_board_objects[startX - 1][startY - 1].possible_moves and x - startX == 2:
+                    canvas.itemconfig(piece_items_in_canvas[x - 2][y - 1], text=rook_symbol,
+                                      font=('Arial', int(square_size / 2)),
+                                      tags=("piece", x, y, return_name_color_of_the_piece(rook_symbol), color))
+                    canvas.itemconfig(piece_items_in_canvas[x][y - 1], text=" ",
+                                      font=('Arial', int(square_size / 2)),
+                                      tags=(x, y))
+                    pieces_on_the_board_objects[x - 2][y - 1] = pieces_on_the_board_objects[x][y - 1]
+                    pieces_on_the_board_objects[x - 2][y - 1].x_L = x - 1
+                    pieces_on_the_board_objects[x][y - 1] = None
+                elif (-2, 0) in pieces_on_the_board_objects[startX - 1][startY - 1].possible_moves and x - startX == -2:
+                    canvas.itemconfig(piece_items_in_canvas[x][y - 1], text=rook_symbol,
+                                      font=('Arial', int(square_size / 2)),
+                                      tags=("piece", x, y, return_name_color_of_the_piece(rook_symbol), color))
+                    canvas.itemconfig(piece_items_in_canvas[x-3][y - 1], text=" ",
+                                      font=('Arial', int(square_size / 2)),
+                                      tags=(x, y))
+                    pieces_on_the_board_objects[x][y - 1] = pieces_on_the_board_objects[x - 3][y - 1]
+                    pieces_on_the_board_objects[x][y - 1].x_L = x + 1
+                    pieces_on_the_board_objects[x - 3][y - 1] = None
+
+
+
             else:
                 previous_moves.append({"x": x, "y": y, "startX": startX, "startY": startY,
                 "colorOfTheMovedPiece": pieces_on_the_board_objects[startX - 1][startY - 1].color,
@@ -150,7 +176,8 @@ class Pawn():
         else:
             self.symbol = chr(0x265F)
             black_pieces.append(self)
-        change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color, False)
+        change_piece_on_the_square(x_L, y_N, self.symbol, True, None,
+                                   None, self.color, False, False)
     def define_possible_moves(self):
         self.possible_moves = []
         self.enPassant = False
@@ -222,7 +249,8 @@ class Bishop():
         else:
             self.symbol = chr(0x265D)
             black_pieces.append(self)
-        change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color, False)
+        change_piece_on_the_square(x_L, y_N, self.symbol, True, None,
+                                   None, self.color, False, False)
     def define_possible_moves(self):
         self.possible_moves = []
         for tuple in pieces_diagonal_y_minus_x_minus:
@@ -298,7 +326,8 @@ class Knight():
         else:
             self.symbol = chr(0x265E)
             black_pieces.append(self)
-        change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color, False)
+        change_piece_on_the_square(x_L, y_N, self.symbol, True, None,
+                                   None, self.color, False, False)
     def define_possible_moves(self):
         self.possible_moves = []
         for tuple in knight_delta_x_y:
@@ -326,7 +355,8 @@ class Rook():
         else:
             self.symbol = chr(0x265C)
             black_pieces.append(self)
-        change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color, False)
+        change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None,
+                                   self.color, False, False)
     def define_possible_moves(self):
         self.possible_moves = []
         for tuple in pieces_vertical_y_plus:
@@ -402,7 +432,8 @@ class Queen():
         else:
             self.symbol = chr(0x265B)
             black_pieces.append(self)
-        change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color, False)
+        change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None,
+                                   self.color, False, False)
     def define_possible_moves(self):
         self.possible_moves = []
         self.possible_moves = []
@@ -519,15 +550,22 @@ class King():
         self.y_N = y_N
         self.type = "King"
         self.possible_moves = []
+        self.castling_queens_side = True
+        self.castling_kings_side = True
+        self.castling = True
         if color == "white":
             self.symbol = chr(0x2654)
             white_pieces.append(self)
         else:
             self.symbol = chr(0x265A)
             black_pieces.append(self)
-        change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None, self.color, False)
+        change_piece_on_the_square(x_L, y_N, self.symbol, True, None, None,
+                                   self.color, False, False)
     def define_possible_moves(self):
         self.possible_moves = []
+        self.castling = True
+        self.castling_queens_side = True
+        self.castling_kings_side = True
         for tuple in kings_delta_x_y:
             deltaX, deltaY = tuple
             try:
@@ -545,6 +583,65 @@ class King():
                         add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
             except IndexError:
                 pass
+        try:
+            if len(previous_moves) > 0:
+                for i in range(len(previous_moves)):
+                    if previous_moves[i]["colorOfTheMovedPiece"] == self.color and previous_moves[i]["typeOfTheMovedPiece"] == "King":
+                        self.castling = False
+                    else:
+                        pass
+                if self.castling == True:
+                    for i in range(len(previous_moves)):
+                        if previous_moves[i]["colorOfTheMovedPiece"] == self.color and previous_moves[i]["typeOfTheMovedPiece"] == "Rook" and previous_moves[i]["startX"] == 8:
+                            self.castling_kings_side = False
+                        else:
+                            pass
+                    if self.castling_kings_side == True:
+                        if (pieces_on_the_board_objects[self.x_L + 1 - 1][self.y_N - 1] is not None
+                        and pieces_on_the_board_objects[self.x_L + 2 - 1][self.y_N - 1] is not None):
+                            self.castling_kings_side = False
+                        else:
+                            if self.color == "white":
+                                if (squares_attacked_by_black_pieces[self.x_L + 1 - 1][self.y_N - 1] is False
+                                    and squares_attacked_by_black_pieces[self.x_L + 2 - 1][self.y_N - 1] is False):
+                                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, 2, 0)
+                                else:
+                                    self.castling_kings_side = False
+                            elif self.color == "black":
+                                if (squares_attacked_by_white_pieces[self.x_L + 1 - 1][self.y_N - 1] is False
+                                    and squares_attacked_by_white_pieces[self.x_L + 2 - 1][self.y_N - 1] is False):
+                                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, 2, 0)
+                                else:
+                                    self.castling_kings_side = False
+
+                    for i in range(len(previous_moves)):
+                        if previous_moves[i]["colorOfTheMovedPiece"] == self.color and previous_moves[i]["typeOfTheMovedPiece"] == "Rook" and previous_moves[i]["startX"] == 1:
+                            self.castling_queens_side = False
+                        else:
+                            pass
+                    if self.castling_queens_side == True:
+                        if (pieces_on_the_board_objects[self.x_L - 1 - 1][self.y_N - 1] is not None
+                        and pieces_on_the_board_objects[self.x_L - 2 - 1][self.y_N - 1] is not None
+                        and pieces_on_the_board_objects[self.x_L - 3 - 1][self.y_N - 1] is not None):
+                            self.castling_queens_side = False
+                        else:
+                            if self.color == "white":
+                                if (squares_attacked_by_black_pieces[self.x_L - 1 - 1][self.y_N - 1] is False
+                                    and squares_attacked_by_black_pieces[self.x_L - 2 - 1][self.y_N - 1] is False):
+                                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, -2, 0)
+                                else:
+                                    self.castling_queens_side = False
+                            elif self.color == "black":
+                                if (squares_attacked_by_white_pieces[self.x_L - 1 - 1][self.y_N - 1] is False
+                                    and squares_attacked_by_black_pieces[self.x_L - 2 - 1][self.y_N - 1] is False):
+                                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, -2, 0)
+                                else:
+                                    self.castling_queens_side = False
+            if self.castling_kings_side == True or self.castling_queens_side == True:
+                self.castling = True
+        except IndexError:
+            pass
+
 def start_function():
     for i in range(8):
         pawnW = Pawn("white",i+1, 2)
@@ -675,28 +772,38 @@ def on_drag_stop(event):
             if x == startX + deltaX and y == startY + deltaY:
                 change_piece = True
     if change_piece:
+        deltaX2 = x - startX
+        deltaY2 = y - startY
         if pieces_on_the_board_objects[startX-1][startY-1].type == "Pawn":
             if pieces_on_the_board_objects[startX-1][startY-1].enPassant == True:
-                deltaX2 = x - startX
-                deltaY2 = y - startY
                 if pieces_on_the_board_objects[startX-1][startY-1].color == "white" and deltaY2 == 1 and deltaX2 == - 1 or deltaX2 == 1:
                     change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX-1][startY-1].symbol, False,
-                                        startX, startY, pieces_on_the_board_objects[startX-1][startY-1].color, True)
+                                        startX, startY, pieces_on_the_board_objects[startX-1][startY-1].color, True, False)
                 elif pieces_on_the_board_objects[startX-1][startY-1].color == "black" and deltaY2 == -1 and deltaX2 == - 1 or deltaX2 == 1:
                     change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX - 1][startY - 1].symbol, False,
                                                startX, startY,
-                                               pieces_on_the_board_objects[startX - 1][startY - 1].color, True)
+                                               pieces_on_the_board_objects[startX - 1][startY - 1].color, True, False)
                 else:
                     change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX - 1][startY - 1].symbol, False,
                                                startX, startY,
-                                               pieces_on_the_board_objects[startX - 1][startY - 1].color, False)
+                                               pieces_on_the_board_objects[startX - 1][startY - 1].color, False, False)
             else:
                 change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX - 1][startY - 1].symbol, False,
                                            startX, startY, pieces_on_the_board_objects[startX - 1][startY - 1].color,
-                                           False)
+                                           False, False)
+        elif pieces_on_the_board_objects[startX-1][startY-1].type == "King":
+            if pieces_on_the_board_objects[startX-1][startY-1].castling == True and deltaX2 == - 2 or deltaX2 == 2:
+                change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX - 1][startY - 1].symbol, False,
+                                           startX, startY, pieces_on_the_board_objects[startX - 1][startY - 1].color,
+                                           False, True)
+            else:
+                change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX - 1][startY - 1].symbol, False,
+                                           startX, startY, pieces_on_the_board_objects[startX - 1][startY - 1].color,
+                                           False, False)
+
         else:
             change_piece_on_the_square(x, y, pieces_on_the_board_objects[startX - 1][startY - 1].symbol, False,
-                                       startX, startY, pieces_on_the_board_objects[startX - 1][startY - 1].color, False)
+                                       startX, startY, pieces_on_the_board_objects[startX - 1][startY - 1].color, False, False)
         canvas.tag_raise(piece_items_in_canvas[x-1][y-1])
     squares_attacked_by_white_pieces = [[False for _ in range(8)] for _ in range(8)]
     squares_attacked_by_black_pieces = [[False for _ in range(8)] for _ in range(8)]
