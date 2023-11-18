@@ -1,12 +1,13 @@
 import copy
 from tkinter import *
+from collections import Counter
 letters = ["a", "b", "c", "d", "e", "f", "g", "h"]
 numbers = ["1", "2", "3", "4", "5", "6", '7', "8"]
 pieces_on_the_board_objects = [[None for _ in range(8)] for _ in range(8)]
 pieces_on_the_board_objects_simulation = None
 piece_items_in_canvas = [[None for _ in range(8)] for _ in range(8)]
 square_items_in_canvas = [[None for _ in range(8)] for _ in range(8)]
-square_size = 40
+square_size = 60
 drag_data = {"item": None, "x": None, "y": None, "startX": None, "startY": None, "rectangle": None}
 black_pieces = []
 white_pieces = []
@@ -23,6 +24,7 @@ knight_delta_x_y = [(2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (1, 2
 squares_attacked_by_white_pieces = [[False for _ in range(8)] for _ in range(8)]
 squares_attacked_by_black_pieces = [[False for _ in range(8)] for _ in range(8)]
 previous_moves = []
+list_of_situations_on_the_board = []
 text_letters_canvas_items = [None, None, None, None, None, None, None, None]
 text_numbers_canvas_items = [None, None, None, None, None, None, None, None]
 who_is_on_bottom_of_the_board = "white"
@@ -31,8 +33,12 @@ chosen_piece = None
 make_moves = True
 situation_of_white_king_global = None
 situation_of_black_king_global = None
-
-
+white_pieces_material = 0
+black_pieces_material = 0
+pieces_captured_by_black_pieces = []
+pieces_captured_by_white_pieces = []
+canvas_items_pieces_captured_by_black_pieces = []
+canvas_items_pieces_captured_by_white_pieces = []
 def add_to_list_of_possible_moves_and_attacked_squares(x, y, deltaX, deltaY, pieces_on_the_board_objects_data):
     global squares_attacked_by_white_pieces
     global squares_attacked_by_black_pieces
@@ -56,8 +62,6 @@ def add_to_list_of_possible_moves_and_attacked_squares(x, y, deltaX, deltaY, pie
                     squares_attacked_by_black_pieces[x + deltaX - 1][y + deltaY - 1] = True
             else:
                 squares_attacked_by_black_pieces[x + deltaX - 1][y + deltaY - 1] = True
-
-
 def add_to_attacked_squares_only(x, y, deltaX, deltaY):
     global squares_attacked_by_white_pieces
     global squares_attacked_by_black_pieces
@@ -66,8 +70,6 @@ def add_to_attacked_squares_only(x, y, deltaX, deltaY):
             squares_attacked_by_white_pieces[x + deltaX - 1][y + deltaY - 1] = True
         elif pieces_on_the_board_objects[x - 1][y - 1].color == "black":
             squares_attacked_by_black_pieces[x + deltaX - 1][y + deltaY - 1] = True
-
-
 def return_name_color_of_the_piece(piece_symbol):
     if piece_symbol == "0x265A": return "blackKing"
     if piece_symbol == "0x265B": return "blackQueen"
@@ -81,8 +83,6 @@ def return_name_color_of_the_piece(piece_symbol):
     if piece_symbol == "0x2657": return "whiteBishop"
     if piece_symbol == "0x2658": return "whiteKnight"
     if piece_symbol == "0x2659": return "whitePawn"
-
-
 def return_the_symbol_based_on_the_name_of_the_piece(name_of_the_piece, color):
     piece_symbol = None
     if color == "white":
@@ -112,8 +112,6 @@ def return_the_symbol_based_on_the_name_of_the_piece(name_of_the_piece, color):
         if name_of_the_piece == "king":
             piece_symbol = chr(0x265A)
     return piece_symbol
-
-
 def return_top_left_tip_of_the_square(x, y):
     right_x = 0
     right_y = 0
@@ -122,8 +120,6 @@ def return_top_left_tip_of_the_square(x, y):
     for j in range(9):
         if j * square_size <= y < j * square_size + square_size: right_y = j * square_size
     return right_x, right_y
-
-
 def return_x_y_of_the_square(x_coordinates, y_coordinates):
     x = 0
     y = 0
@@ -132,11 +128,13 @@ def return_x_y_of_the_square(x_coordinates, y_coordinates):
     for j in range(9):
         if j * square_size <= y_coordinates < j * square_size + square_size: y = 9 - j
     return x, y
-
-
 def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, startY, color, enPassant, castling):
     global pieces_on_the_board
     global previous_moves
+    global white_pieces_material
+    global black_pieces_material
+    global pieces_captured_by_white_pieces
+    global pieces_captured_by_black_pieces
     piece_name = return_name_color_of_the_piece(piece_symbol)
     do_not_interfere = False
     canvas.itemconfig(piece_items_in_canvas[x - 1][y - 1], text=piece_symbol,
@@ -151,9 +149,15 @@ def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, start
                           tags=(x, y))
         if pieces_on_the_board_objects[x - 1][y - 1] is not None:
             if pieces_on_the_board_objects[x - 1][y - 1].color == "black":
-                black_pieces.remove(pieces_on_the_board_objects[x - 1][y - 1])
+                if enPassant == False:
+                    black_pieces.remove(pieces_on_the_board_objects[x - 1][y - 1])
+                    white_pieces_material += pieces_on_the_board_objects[x - 1][y - 1].value
+                    pieces_captured_by_white_pieces.append(pieces_on_the_board_objects[x - 1][y - 1].symbol)
             elif pieces_on_the_board_objects[x - 1][y - 1].color == "white":
-                white_pieces.remove(pieces_on_the_board_objects[x - 1][y - 1])
+                if enPassant == False:
+                    white_pieces.remove(pieces_on_the_board_objects[x - 1][y - 1])
+                    black_pieces_material += pieces_on_the_board_objects[x - 1][y - 1].value
+                    pieces_captured_by_black_pieces.append(pieces_on_the_board_objects[x - 1][y - 1].symbol)
             previous_moves.append({"x": x, "y": y, "startX": startX, "startY": startY,
                                    "colorOfTheMovedPiece": pieces_on_the_board_objects[startX - 1][startY - 1].color,
                                    "typeOfTheMovedPiece": pieces_on_the_board_objects[startX - 1][startY - 1].type,
@@ -162,12 +166,16 @@ def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, start
             if enPassant == True:
                 if pieces_on_the_board_objects[startX - 1][startY - 1].color == "white":
                     black_pieces.remove(pieces_on_the_board_objects[x - 1][y - 2])
+                    white_pieces_material += pieces_on_the_board_objects[x - 1][y - 2].value
+                    pieces_captured_by_white_pieces.append(pieces_on_the_board_objects[x - 1][y - 2].symbol)
                     pieces_on_the_board_objects[x - 1][y - 2] = None
                     canvas.itemconfig(piece_items_in_canvas[x - 1][y - 2], text=" ",
                                       font=('Arial', int(square_size / 2)),
                                       tags=("piece", x, y, piece_name, color))
                 elif pieces_on_the_board_objects[startX - 1][startY - 1].color == "black":
                     white_pieces.remove(pieces_on_the_board_objects[x - 1][y])
+                    black_pieces_material += pieces_on_the_board_objects[x - 1][y].value
+                    pieces_captured_by_black_pieces.append(pieces_on_the_board_objects[x - 1][y].symbol)
                     pieces_on_the_board_objects[x - 1][y] = None
                     canvas.itemconfig(piece_items_in_canvas[x - 1][y], text=" ",
                                       font=('Arial', int(square_size / 2)),
@@ -281,10 +289,11 @@ def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, start
                     pieces_on_the_board_objects[startX - 1][startY - 1] = None
                     do_not_interfere = True
         if do_not_interfere == False:
-            previous_moves.append({"x": x, "y": y, "startX": startX, "startY": startY,
-                                   "colorOfTheMovedPiece": pieces_on_the_board_objects[startX - 1][startY - 1].color,
-                                   "typeOfTheMovedPiece": pieces_on_the_board_objects[startX - 1][startY - 1].type,
-                                   "capturedPieceType": None})
+            if pieces_on_the_board_objects[x - 1][y - 1] is None:
+                previous_moves.append({"x": x, "y": y, "startX": startX, "startY": startY,
+                                       "colorOfTheMovedPiece": pieces_on_the_board_objects[startX - 1][startY - 1].color,
+                                       "typeOfTheMovedPiece": pieces_on_the_board_objects[startX - 1][startY - 1].type,
+                                       "capturedPieceType": None})
             pieces_on_the_board_objects[x - 1][y - 1] = pieces_on_the_board_objects[startX - 1][startY - 1]
             pieces_on_the_board_objects[x - 1][y - 1].x_L = x
             pieces_on_the_board_objects[x - 1][y - 1].y_N = y
@@ -357,10 +366,6 @@ def check_whether_the_move_will_affect_kings_situation(object, x, y):
     if can_make_this_move is not False:
         can_make_this_move = True
     return can_make_this_move
-
-
-
-
 def check_situation_of_the_king(color):
     situation_of_the_king = None
     global squares_attacked_by_white_pieces
@@ -414,7 +419,6 @@ def check_situation_of_the_king(color):
                 situation_of_the_king = "checkmate"
         else:
             situation_of_the_king = "safe"
-        print(situation_of_the_king)
     elif color == "black":
         for object in black_pieces:
             object.define_possible_moves(pieces_on_the_board_objects)
@@ -462,13 +466,76 @@ def check_situation_of_the_king(color):
                 situation_of_the_king = "checkmate"
         else:
             situation_of_the_king = "safe"
-        print(situation_of_the_king)
     return situation_of_the_king
-
-
-
-
-
+def check_whether_stalemate():
+    stalemate = True
+    white_material = 0
+    black_material = 0
+    stalemate_white = True
+    stalemate_black = True
+    stalemate_material = True
+    stalemate_moves = True
+    stalemate_situation = True
+    for object in white_pieces:
+        object.define_possible_moves(pieces_on_the_board_objects)
+    for object in black_pieces:
+        object.define_possible_moves(pieces_on_the_board_objects)
+    for object in white_pieces:
+        if object.possible_moves != [] and turn == "black":
+            stalemate_white = False
+        if object.type != "King":
+            white_material += object.value
+    for object in black_pieces:
+        if object.possible_moves != [] and turn == "white":
+            stalemate_black = False
+        if object.type != "King":
+            black_material += object.value
+    if black_material > 5 or any(obj.type == "Pawn" for obj in black_pieces) and white_material > 5 or any(obj.type == "Pawn" for obj in white_pieces):
+        stalemate_material = False
+    if stalemate_white == False and stalemate_black == False:
+        stalemate_moves = False
+    for situation in list_of_situations_on_the_board:
+        same_situations = 0
+        for situation2 in list_of_situations_on_the_board:
+            if situation == situation2:
+                same_situations += 1
+        if same_situations > 2:
+            stalemate_situation = False
+    if stalemate_moves == False and stalemate_material == False and stalemate_situation:
+        stalemate = False
+    return stalemate
+def draw_situation_on_the_board():
+    situation_on_the_board = [[None for _ in range(8)] for _ in range(8)]
+    for i in range(8):
+        for j in range(8):
+            if pieces_on_the_board_objects[i][j] is not None:
+                if pieces_on_the_board_objects[i][j].color == "white":
+                    if pieces_on_the_board_objects[i][j].type == "King":
+                        situation_on_the_board[i][j] = "WKing"
+                    elif pieces_on_the_board_objects[i][j].type == "Queen":
+                        situation_on_the_board[i][j] = "WQueen"
+                    elif pieces_on_the_board_objects[i][j].type == "Rook":
+                        situation_on_the_board[i][j] = "WRook"
+                    elif pieces_on_the_board_objects[i][j].type == "Bischop":
+                        situation_on_the_board[i][j] = "WBischop"
+                    elif pieces_on_the_board_objects[i][j].type == "Knight":
+                        situation_on_the_board[i][j] = "WKnight"
+                    elif pieces_on_the_board_objects[i][j].type == "Pawn":
+                        situation_on_the_board[i][j] = "WPawn"
+                elif pieces_on_the_board_objects[i][j].color == "black":
+                    if pieces_on_the_board_objects[i][j].type == "King":
+                        situation_on_the_board[i][j] = "BKing"
+                    elif pieces_on_the_board_objects[i][j].type == "Queen":
+                        situation_on_the_board[i][j] = "BQueen"
+                    elif pieces_on_the_board_objects[i][j].type == "Rook":
+                        situation_on_the_board[i][j] = "BRook"
+                    elif pieces_on_the_board_objects[i][j].type == "Bischop":
+                        situation_on_the_board[i][j] = "BBischop"
+                    elif pieces_on_the_board_objects[i][j].type == "Knight":
+                        situation_on_the_board[i][j] = "BKnight"
+                    elif pieces_on_the_board_objects[i][j].type == "Pawn":
+                        situation_on_the_board[i][j] = "BPawn"
+    return situation_on_the_board
 class Pawn():
     def __init__(self, color, x_L, y_N):
         self.color = color
@@ -478,6 +545,7 @@ class Pawn():
         self.possible_moves = []
         self.type = "Pawn"
         self.enPassant = False
+        self.value = 1
         if self.color == "white":
             self.symbol = chr(0x2659)
             white_pieces.append(self)
@@ -507,12 +575,12 @@ class Pawn():
             if len(previous_moves) != 0:
                 if (last_move["x"] == self.x_L - 1 or last_move["x"] == self.x_L + 1 and last_move["y"] == self.y_N
                         and last_move["startX"] == last_move["x"] and last_move["startY"] == 2
-                        and last_move["colorOfTheMovedPiece"] != self.color and last_move[
-                            "typeOfTheMovedPiece"] == "Pawn"
+                        and last_move["colorOfTheMovedPiece"] != self.color
                         and last_move["capturedPieceType"] == None):
-                    self.enPassant = True
-                    add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, last_move["x"] - self.x_L,
-                                                                       -1, pieces_on_the_board_objects_data)
+                    if last_move["typeOfTheMovedPiece"] == "Pawn":
+                        self.enPassant = True
+                        add_to_list_of_possible_moves_and_attacked_squares(self.x_L, self.y_N, last_move["x"] - self.x_L,
+                                                                           -1, pieces_on_the_board_objects_data)
         try:
 
             if self.color == "white":
@@ -547,8 +615,6 @@ class Pawn():
                 add_to_attacked_squares_only(self.x_L, self.y_N, 1, -1)
         except IndexError:
             pass
-
-
 class Bishop():
     def __init__(self, color, x_L, y_N):
         self.color = color
@@ -556,6 +622,7 @@ class Bishop():
         self.y_N = y_N
         self.possible_moves = []
         self.type = "Bishop"
+        self.value = 3
         if color == "white":
             self.symbol = chr(0x2657)
             white_pieces.append(self)
@@ -635,8 +702,6 @@ class Bishop():
                     break
             except IndexError:
                 pass
-
-
 class Knight():
     def __init__(self, color, x_L, y_N):
         self.color = color
@@ -644,6 +709,7 @@ class Knight():
         self.y_N = y_N
         self.possible_moves = []
         self.type = "Knight"
+        self.value = 3
         if color == "white":
             self.symbol = chr(0x2658)
             white_pieces.append(self)
@@ -667,8 +733,6 @@ class Knight():
                         add_to_attacked_squares_only(self.x_L, self.y_N, deltaX, deltaY)
             except IndexError:
                 pass
-
-
 class Rook():
     def __init__(self, color, x_L, y_N):
         self.color = color
@@ -676,6 +740,7 @@ class Rook():
         self.y_N = y_N
         self.possible_moves = []
         self.type = "Rook"
+        self.value = 5
         if color == "white":
             self.symbol = chr(0x2656)
             white_pieces.append(self)
@@ -755,8 +820,6 @@ class Rook():
                     break
             except IndexError:
                 pass
-
-
 class Queen():
     def __init__(self, color, x_L, y_N):
         self.color = color
@@ -764,6 +827,7 @@ class Queen():
         self.y_N = y_N
         self.possible_moves = []
         self.type = "Queen"
+        self.value = 9
         if color == "white":
             self.symbol = chr(0x2655)
             white_pieces.append(self)
@@ -908,8 +972,6 @@ class Queen():
                     break
             except IndexError:
                 pass
-
-
 class King():
     def __init__(self, color, x_L, y_N):
         self.color = color
@@ -1016,8 +1078,6 @@ class King():
                 self.castling = True
         except IndexError:
             pass
-
-
 def start_function():
     for i in range(8):
         pawnW = Pawn("white", i + 1, 2)
@@ -1060,22 +1120,19 @@ def start_function():
     pieces_on_the_board_objects[4][0] = kingW
     kingB = King("black", 5, 8)
     pieces_on_the_board_objects[4][7] = kingB
-
-
 window = Tk()
 window.attributes('-fullscreen', True)
 window.configure(bg="#4a4a4a")
 
 chessLabel = Label(window, bg="#4a4a4a")
 chessLabel.pack(anchor="n", pady=int(square_size * 1.25))
-
-materialLabelTop = Label(chessLabel, text="Here white's captured pieces will be shown", font=int(square_size * 0.75))
+materialLabelTop = Label(chessLabel, bg="#4a4a4a", font=int(square_size * 0.75))
 materialLabelTop.pack()
+canvas_material_top = Canvas(materialLabelTop, height=square_size, bg="#4a4a4a", width=square_size*9)
+canvas_material_top.pack()
 
 boardLabels = Label(chessLabel, bg="#4a4a4a")
 boardLabels.pack()
-
-
 def create_chess_board():
     global square_items_in_canvas
     global piece_items_in_canvas
@@ -1110,8 +1167,6 @@ def create_chess_board():
             square_items_in_canvas[i][7 - j] = square_item
             piece_item = canvas.create_text(x0 + int(square_size / 2), y0 + int(square_size / 2), text=" ")
             piece_items_in_canvas[i][7 - j] = piece_item
-
-
 def reverse_the_board():
     global who_is_on_bottom_of_the_board
     if who_is_on_bottom_of_the_board == "white":
@@ -1129,8 +1184,33 @@ def reverse_the_board():
             canvas.itemconfig(text_numbers_canvas_items[j], text=numbers[7 - j],
                               font=('Arial', int(square_size / 2)))
             who_is_on_bottom_of_the_board = "white"
-
-
+def update_pieces_captured_by_white_and_black_pieces():
+    global canvas_material_bottom
+    global canvas_material_top
+    last_x0_black = 0
+    last_x0_white = 0
+    for i in canvas_items_pieces_captured_by_white_pieces:
+        canvas_material_bottom.delete(i)
+    for i in canvas_items_pieces_captured_by_black_pieces:
+        canvas_material_top.delete(i)
+    for j, symbol in enumerate(pieces_captured_by_black_pieces):
+        x0 = j*int(square_size/3) + int(square_size/2)
+        y0 = int(square_size/4)
+        piece = canvas_material_top.create_text(x0, y0 + int(square_size / 4), text=symbol, font=("Arial", int(square_size / 2)))
+        canvas_items_pieces_captured_by_black_pieces.append(piece)
+        last_x0_black = x0
+    for i, symbol in enumerate(pieces_captured_by_white_pieces):
+        x0 = i*int(square_size/3) + int(square_size/2)
+        y0 = int(square_size/4)
+        piece = canvas_material_bottom.create_text(x0, y0 + int(square_size / 4), text=symbol, font=("Arial", int(square_size / 2)))
+        canvas_items_pieces_captured_by_white_pieces.append(piece)
+        last_x0_white = x0
+    piece = canvas_material_bottom.create_text(last_x0_white + int(square_size / 2) + int(square_size/4), int(square_size/2), text=white_pieces_material,
+                                               font=("Arial", int(square_size / 2)))
+    canvas_items_pieces_captured_by_white_pieces.append(piece)
+    piece2 = canvas_material_top.create_text(last_x0_black + int(square_size / 2) + int(square_size/4), int(square_size/2), text=black_pieces_material,
+                                               font=("Arial", int(square_size / 2)))
+    canvas_items_pieces_captured_by_black_pieces.append(piece2)
 def on_drag_start(event):
     global drag_data
     row, col = return_x_y_of_the_square(event.x, event.y)
@@ -1146,8 +1226,6 @@ def on_drag_start(event):
         drag_data["rectangle"] = None
 
     canvas.tag_raise(closest_item)
-
-
 def on_drag_motion(event):
     global drag_data
     if drag_data["item"]:
@@ -1166,8 +1244,6 @@ def on_drag_motion(event):
         drag_data["rectangle"] = rectangle
         canvas.tag_raise(drag_data["rectangle"])
     canvas.tag_raise(drag_data["item"])
-
-
 def on_drag_stop(event):
     global drag_data
     global squares_attacked_by_black_pieces
@@ -1175,6 +1251,7 @@ def on_drag_stop(event):
     global turn
     global situation_of_white_king_global
     global situation_of_black_king_global
+    global win_label
     canvas.coords(drag_data["item"], drag_data["startX"], drag_data["startY"])
     change_piece = False
     canvas.delete(drag_data["rectangle"])
@@ -1256,36 +1333,44 @@ def on_drag_stop(event):
                 else:
                     turn = "white"
             canvas.tag_raise(piece_items_in_canvas[x - 1][y - 1])
+        list_of_situations_on_the_board.append(draw_situation_on_the_board())
         if check_situation_of_the_king("white") != "checkmate":
             situation_of_white_king_global = check_situation_of_the_king("white")
+            update_pieces_captured_by_white_and_black_pieces()
         elif check_situation_of_the_king("white") == "checkmate":
             situation_of_white_king_global = check_situation_of_the_king("white")
-            global win_label
             canvas.destroy()
             boardLabels.destroy()
-            test_button.destroy()
-            pawn_promotion_menu_label.destroy()
             materialLabelTop.destroy()
+            materialLabelBottom.destroy()
+            chessLabel.destroy()
             win_label = Label(window, text="Black won", font=("Impact", int(square_size*4)), bg="#4a4a4a", fg="white")
             win_label.pack(anchor="n")
         if check_situation_of_the_king("black") != "checkmate":
             situation_of_black_king_global = check_situation_of_the_king("black")
+            update_pieces_captured_by_white_and_black_pieces()
         elif check_situation_of_the_king("black") == "checkmate":
             situation_of_black_king_global = check_situation_of_the_king("black")
             canvas.destroy()
             boardLabels.destroy()
-            test_button.destroy()
-            pawn_promotion_menu_label.destroy()
             materialLabelTop.destroy()
+            materialLabelBottom.destroy()
+            chessLabel.destroy()
             win_label = Label(window, text="White won", font=("Impact", int(square_size * 4)), bg="#4a4a4a", fg="white")
+            win_label.pack(anchor="n")
+        if check_whether_stalemate() == True:
+            canvas.destroy()
+            boardLabels.destroy()
+            materialLabelTop.destroy()
+            materialLabelBottom.destroy()
+            chessLabel.destroy()
+            win_label = Label(window, text="Stalemate", font=("Impact", int(square_size * 4)), bg="#4a4a4a", fg="white")
             win_label.pack(anchor="n")
     else:
         pass
         squares_attacked_by_white_pieces = [[False for _ in range(8)] for _ in range(8)]
         squares_attacked_by_black_pieces = [[False for _ in range(8)] for _ in range(8)]
         drag_data = {"item": None, "x": None, "y": None, "startX": None, "startY": None}
-
-
 def create_destroy_piece_choice_menu(color, create):
     global queen_button
     global rook_button
@@ -1294,6 +1379,10 @@ def create_destroy_piece_choice_menu(color, create):
     global pawn_promotion_menu_label
     global make_moves
     piece_selected = BooleanVar(value=False)
+    pawn_promotion_menu_label = Label(window, font=('Arial', int(square_size / 2)),
+                                      bg="white",
+                                      fg="black")
+    pawn_promotion_menu_label.pack()
     label = Label(window)
     label.pack
 
@@ -1357,18 +1446,19 @@ def create_destroy_piece_choice_menu(color, create):
         make_moves = False
         label.wait_variable(piece_selected)
         make_moves = True
+        pawn_promotion_menu_label.destroy()
         return chosen_piece
     else:
         destroy_buttons()
 
 
-canvas = Canvas(boardLabels, height=square_size * 9)
+canvas = Canvas(boardLabels, height=square_size * 9, width=square_size * 9)
 canvas.pack()
-pawn_promotion_menu_label = Label(window, text="Here will be menu", font=('Arial', int(square_size / 2)), bg="white",
-                                  fg="black")
-pawn_promotion_menu_label.pack()
-test_button = Button(window, text="Check king's situation", command=lambda: check_situation_of_the_king("white"))
-test_button.pack()
 create_chess_board()
 start_function()
+list_of_situations_on_the_board.append(draw_situation_on_the_board())
+materialLabelBottom = Label(chessLabel, text="Here black's captured pieces will be shown", font=int(square_size * 0.75), bg="#4a4a4a")
+materialLabelBottom.pack()
+canvas_material_bottom = Canvas(materialLabelBottom, height=square_size, bg="#4a4a4a", width=square_size * 9)
+canvas_material_bottom.pack()
 window.mainloop()
