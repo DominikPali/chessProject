@@ -471,29 +471,25 @@ def check_whether_stalemate():
     stalemate = True
     white_material = 0
     black_material = 0
-    stalemate_white = True
-    stalemate_black = True
     stalemate_material = True
     stalemate_moves = True
     stalemate_situation = True
-    for object in white_pieces:
-        object.define_possible_moves(pieces_on_the_board_objects)
-    for object in black_pieces:
-        object.define_possible_moves(pieces_on_the_board_objects)
-    for object in white_pieces:
-        if object.possible_moves != [] and turn == "black":
-            stalemate_white = False
-        if object.type != "King":
-            white_material += object.value
-    for object in black_pieces:
-        if object.possible_moves != [] and turn == "white":
-            stalemate_black = False
-        if object.type != "King":
-            black_material += object.value
+    if turn == "white":
+        for object in white_pieces:
+            object.define_possible_moves(pieces_on_the_board_objects)
+            if object.possible_moves != []:
+                stalemate_moves = False
+            if object.type != "King":
+                white_material += object.value
+    elif turn == "black":
+        for object in black_pieces:
+            object.define_possible_moves(pieces_on_the_board_objects)
+            if object.possible_moves != []:
+                stalemate_moves = False
+            if object.type != "King":
+                black_material += object.value
     if black_material > 5 or any(obj.type == "Pawn" for obj in black_pieces) and white_material > 5 or any(obj.type == "Pawn" for obj in white_pieces):
         stalemate_material = False
-    if stalemate_white == False and stalemate_black == False:
-        stalemate_moves = False
     for situation in list_of_situations_on_the_board:
         same_situations = 0
         for situation2 in list_of_situations_on_the_board:
