@@ -180,7 +180,7 @@ def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, start
                     white_pieces_material += pieces_on_the_board_objects[x - 1][y - 2].value
                     pieces_captured_by_white_pieces.append(pieces_on_the_board_objects[x - 1][y - 2].symbol)
                     pieces_on_the_board_objects[x - 1][y - 2] = None
-                    canvas.itemconfig(piece_items_in_canvas[adjust_indexing_by_substraction(x - 1)-(x - 1)][adjust_indexing_by_substraction(y - 2)-(y - 2)], text=" ",
+                    canvas.itemconfig(piece_items_in_canvas[adjust_indexing_by_substraction(x - 1)-(x - 1)][adjust_indexing_by_substraction(y - 1)-(y - 1)], text=" ",
                                       font=('Arial', int(square_size / 2)),
                                       tags=("piece", x, y, piece_name, color))
                 elif pieces_on_the_board_objects[startX - 1][startY - 1].color == "black":
@@ -188,7 +188,7 @@ def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, start
                     black_pieces_material += pieces_on_the_board_objects[x - 1][y].value
                     pieces_captured_by_black_pieces.append(pieces_on_the_board_objects[x - 1][y].symbol)
                     pieces_on_the_board_objects[x - 1][y] = None
-                    canvas.itemconfig(piece_items_in_canvas[adjust_indexing_by_substraction(x - 1)-(x - 1)][adjust_indexing_by_substraction(y)-(y)], text=" ",
+                    canvas.itemconfig(piece_items_in_canvas[adjust_indexing_by_substraction(x - 1)-(x - 1)][adjust_indexing_by_substraction(y - 1)-(y - 1)], text=" ",
                                       font=('Arial', int(square_size / 2)),
                                       tags=("piece", x, y, piece_name, color))
                 previous_moves.append({"x": x, "y": y, "startX": startX, "startY": startY,
@@ -208,10 +208,10 @@ def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, start
                                        "typeOfTheMovedPiece": pieces_on_the_board_objects[startX - 1][startY - 1].type,
                                        "capturedPieceType": None})
                 if (2, 0) in pieces_on_the_board_objects[startX - 1][startY - 1].possible_moves and x - startX == 2:
-                    canvas.itemconfig(piece_items_in_canvas[adjust_indexing_by_substraction(x - 2)-(x - 2)][adjust_indexing_by_substraction(y - 1)-(y - 1)], text=rook_symbol,
+                    canvas.itemconfig(piece_items_in_canvas[adjust_indexing_by_substraction(x - 1)-(x - 1)][adjust_indexing_by_substraction(y - 1)-(y - 1)], text=rook_symbol,
                                       font=('Arial', int(square_size / 2)),
                                       tags=("piece", x, y, return_name_color_of_the_piece(rook_symbol), color))
-                    canvas.itemconfig(piece_items_in_canvas[adjust_indexing_by_substraction(x)-(x)][adjust_indexing_by_substraction(y - 1)-(y - 1)], text=" ",
+                    canvas.itemconfig(piece_items_in_canvas[adjust_indexing_by_substraction(x - 1)-(x - 1)][adjust_indexing_by_substraction(y - 1)-(y - 1)], text=" ",
                                       font=('Arial', int(square_size / 2)),
                                       tags=(x, y))
                     pieces_on_the_board_objects[x - 2][y - 1] = pieces_on_the_board_objects[x][y - 1]
@@ -221,10 +221,10 @@ def change_piece_on_the_square(x, y, piece_symbol, setting_pieces, startX, start
                     pieces_on_the_board_objects[x - 1][y - 1].x_L = x
                     pieces_on_the_board_objects[startX - 1][startY - 1] = None
                 elif (-2, 0) in pieces_on_the_board_objects[startX - 1][startY - 1].possible_moves and x - startX == -2:
-                    canvas.itemconfig(piece_items_in_canvas[adjust_indexing_by_substraction(x)-(x)][adjust_indexing_by_substraction(y - 1)-(y - 1)], text=rook_symbol,
+                    canvas.itemconfig(piece_items_in_canvas[adjust_indexing_by_substraction(x - 1)-(x - 1)][adjust_indexing_by_substraction(y - 1)-(y - 1)], text=rook_symbol,
                                       font=('Arial', int(square_size / 2)),
                                       tags=("piece", x, y, return_name_color_of_the_piece(rook_symbol), color))
-                    canvas.itemconfig(piece_items_in_canvas[adjust_indexing_by_substraction(x - 3)-(x - 3)][adjust_indexing_by_substraction(y - 1)-(y - 1)], text=" ",
+                    canvas.itemconfig(piece_items_in_canvas[adjust_indexing_by_substraction(x - 1)-(x - 1)][adjust_indexing_by_substraction(y - 1)-(y - 1)], text=" ",
                                       font=('Arial', int(square_size / 2)),
                                       tags=(x, y))
                     pieces_on_the_board_objects[x][y - 1] = pieces_on_the_board_objects[x - 3][y - 1]
@@ -1273,7 +1273,7 @@ def on_drag_start(event):
         row, col = return_x_y_of_the_square(event.x, event.y)
     else:
         row, col = return_x_y_of_the_square_black_on_bottom(event.x, event.y)
-    closest_item = piece_items_in_canvas[row - 1][col - 1]
+    closest_item = piece_items_in_canvas[adjust_indexing_by_substraction(row - 1)-(row - 1)][adjust_indexing_by_substraction(col - 1)-(col - 1)]
     item_tags = canvas.gettags(closest_item)
     if "piece" in item_tags and make_moves == True:
         drag_data["item"] = closest_item
@@ -1429,6 +1429,8 @@ def on_drag_stop(event):
                     chessLabel.destroy()
                     win_label = Label(window, text="Stalemate", font=("Impact", int(square_size * 4)), bg="#4a4a4a", fg="white")
                     win_label.pack(anchor="n")
+                else:
+                    reverse_the_board()
     else:
         pass
         squares_attacked_by_white_pieces = [[False for _ in range(8)] for _ in range(8)]
@@ -1522,6 +1524,4 @@ materialLabelBottom = Label(chessLabel, text="Here black's captured pieces will 
 materialLabelBottom.pack()
 canvas_material_bottom = Canvas(materialLabelBottom, height=square_size, bg="#4a4a4a", width=square_size * 9)
 canvas_material_bottom.pack()
-test_button = Button(window, text="test", command=reverse_the_board)
-test_button.pack()
 window.mainloop()
