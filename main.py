@@ -1,6 +1,6 @@
 import copy
 from tkinter import *
-from collections import Counter
+import time
 letters = ["a", "b", "c", "d", "e", "f", "g", "h"]
 numbers = ["1", "2", "3", "4", "5", "6", '7', "8"]
 pieces_on_the_board_objects = [[None for _ in range(8)] for _ in range(8)]
@@ -39,7 +39,13 @@ pieces_captured_by_black_pieces = []
 pieces_captured_by_white_pieces = []
 canvas_items_pieces_captured_by_black_pieces = []
 canvas_items_pieces_captured_by_white_pieces = []
-adjust_indexing = 0
+player1 = ""
+player2 = ""
+player1_score = 0
+player2_score = 0
+players_names_associated_with_color = {}
+
+
 def add_to_list_of_possible_moves_and_attacked_squares(x, y, deltaX, deltaY, pieces_on_the_board_objects_data):
     global squares_attacked_by_white_pieces
     global squares_attacked_by_black_pieces
@@ -1142,17 +1148,43 @@ def start_function():
     pieces_on_the_board_objects[4][0] = kingW
     kingB = King("black", 5, 8)
     pieces_on_the_board_objects[4][7] = kingB
+def wait_for_players_names():
+    players_names_entered = BooleanVar(value=False)
+    global player1
+    global player2
+    def button_clicked():
+        if input1.get() != "" and input2.get() != "" and input1.get() != input2.get():
+            players_names_entered.set(True)
+    input1 = Entry(window)
+    input1.pack()
+    input2 = Entry(window)
+    input2.pack()
+    submit_players_names_button = Button(window, text="Submit", command=button_clicked)
+    submit_players_names_button.pack()
+    window.wait_variable(players_names_entered)
+    player1 = str(input1.get())
+    player2 = str(input2.get())
+    input1.destroy()
+    input2.destroy()
+    submit_players_names_button.destroy()
+    global players_names_associated_with_color
+    players_names_associated_with_color = {player1:"white", player2:"black"}
 window = Tk()
 window.attributes('-fullscreen', True)
 window.configure(bg="#4a4a4a")
-
+wait_for_players_names()
+title_label = Label(window, text="Chess", font=('Impact', int(square_size*1.5)), bg="#4a4a4a", fg="#ffffff")
+title_label.pack()
+player_on_the_top_of_the_board_label = Label(window, text=player2, font=("Oswald", int(square_size/2)), bg="#4a4a4a", fg="#ffffff")
+player_on_the_top_of_the_board_label.pack()
 chessLabel = Label(window, bg="#4a4a4a")
-chessLabel.pack(anchor="n", pady=int(square_size * 1.25))
+chessLabel.pack(anchor="n")
+score_label = Label(window, text="Score: " + player1 + ": " + str(player1_score) + " ; " + player2 + ": " + str(player2_score), font=("Impact", int(square_size/2)), bg="#4a4a4a", fg="#ffffff")
+score_label.place(x=int(square_size * 4), y=int(square_size*3))
 materialLabelTop = Label(chessLabel, bg="#4a4a4a", font=int(square_size * 0.75))
 materialLabelTop.pack()
 canvas_material_top = Canvas(materialLabelTop, height=square_size, bg="#4a4a4a", width=square_size*9)
 canvas_material_top.pack()
-
 boardLabels = Label(chessLabel, bg="#4a4a4a")
 boardLabels.pack()
 def create_chess_board():
@@ -1192,6 +1224,12 @@ def create_chess_board():
 def reverse_the_board():
     global who_is_on_bottom_of_the_board
     global adjust_indexing
+    if players_names_associated_with_color[player1] == "white":
+        key_with_value_black = player2
+        key_with_value_white = player1
+    else:
+        key_with_value_black = player1
+        key_with_value_white = player2
     if who_is_on_bottom_of_the_board == "white":
         for i in range(8):
             canvas.itemconfig(text_letters_canvas_items[i], text=letters[7 - i],
@@ -1214,6 +1252,8 @@ def reverse_the_board():
                     canvas.tag_bind("piece", '<B1-Motion>', on_drag_motion)
                     canvas.tag_bind("piece", '<ButtonRelease-1>', on_drag_stop)
         who_is_on_bottom_of_the_board = "black"
+        player_on_the_bottom_of_the_board_label.config(text=key_with_value_black)
+        player_on_the_top_of_the_board_label.config(text=key_with_value_white)
     elif who_is_on_bottom_of_the_board == "black":
         for j in range(8):
             canvas.itemconfig(text_letters_canvas_items[j], text=letters[j],
@@ -1236,7 +1276,8 @@ def reverse_the_board():
                     canvas.tag_bind("piece", '<B1-Motion>', on_drag_motion)
                     canvas.tag_bind("piece", '<ButtonRelease-1>', on_drag_stop)
         who_is_on_bottom_of_the_board = "white"
-
+        player_on_the_bottom_of_the_board_label.config(text=key_with_value_white)
+        player_on_the_top_of_the_board_label.config(text=key_with_value_black)
 def update_pieces_captured_by_white_and_black_pieces():
     global canvas_material_bottom
     global canvas_material_top
@@ -1406,8 +1447,15 @@ def on_drag_stop(event):
                 materialLabelTop.destroy()
                 materialLabelBottom.destroy()
                 chessLabel.destroy()
-                win_label = Label(window, text="Black won", font=("Impact", int(square_size*4)), bg="#4a4a4a", fg="white")
-                win_label.pack(anchor="n")
+                score_label.destroy()
+                title_label.destroy()
+                player_on_the_top_of_the_board_label.destroy()
+                player_on_the_bottom_of_the_board_label.destroy()
+                if players_names_associated_with_color[player1] == "black":
+                    player_who_won = player1
+                elif players_names_associated_with_color[player2] == "black":
+                    player_who_won = player2
+                want_to_play_again("black", player_who_won)
             if check_situation_of_the_king("black") != "checkmate":
                 situation_of_black_king_global = check_situation_of_the_king("black")
                 update_pieces_captured_by_white_and_black_pieces()
@@ -1418,8 +1466,15 @@ def on_drag_stop(event):
                 materialLabelTop.destroy()
                 materialLabelBottom.destroy()
                 chessLabel.destroy()
-                win_label = Label(window, text="White won", font=("Impact", int(square_size * 4)), bg="#4a4a4a", fg="white")
-                win_label.pack(anchor="n")
+                score_label.destroy()
+                title_label.destroy()
+                player_on_the_top_of_the_board_label.destroy()
+                player_on_the_bottom_of_the_board_label.destroy()
+                if players_names_associated_with_color[player1] == "white":
+                    player_who_won = player1
+                elif players_names_associated_with_color[player2] == "white":
+                    player_who_won = player2
+                want_to_play_again("white", player_who_won)
             if check_situation_of_the_king("black") != "checkmate" and check_situation_of_the_king("white") != "checkmate":
                 if check_whether_stalemate() == True:
                     canvas.destroy()
@@ -1427,8 +1482,11 @@ def on_drag_stop(event):
                     materialLabelTop.destroy()
                     materialLabelBottom.destroy()
                     chessLabel.destroy()
-                    win_label = Label(window, text="Stalemate", font=("Impact", int(square_size * 4)), bg="#4a4a4a", fg="white")
-                    win_label.pack(anchor="n")
+                    score_label.destroy()
+                    title_label.destroy()
+                    player_on_the_top_of_the_board_label.destroy()
+                    player_on_the_bottom_of_the_board_label.destroy()
+                    want_to_play_again(None, "Nobody")
                 else:
                     reverse_the_board()
     else:
@@ -1449,7 +1507,7 @@ def create_destroy_piece_choice_menu(color, create):
                                       fg="black")
     pawn_promotion_menu_label.pack()
     label = Label(window)
-    label.pack
+    label.pack()
 
     def chose_queen():
         global chosen_piece
@@ -1512,9 +1570,125 @@ def create_destroy_piece_choice_menu(color, create):
         label.wait_variable(piece_selected)
         make_moves = True
         pawn_promotion_menu_label.destroy()
+        label.destroy()
         return chosen_piece
     else:
         destroy_buttons()
+def want_to_play_again(who_won, player_who_won):
+    win_label = Label(window, text=player_who_won + " won", font=("Impact", int(square_size * 2)),
+                      bg="#4a4a4a", fg="white")
+    win_label.pack(anchor="n")
+    def want_to_play_again():
+        continue_th_game_or_not(False)
+    def do_not_want_to_play_again():
+        continue_th_game_or_not(True)
+    def continue_th_game_or_not(window_destroy):
+        if window_destroy == True:
+            window.destroy()
+        elif window_destroy == False:
+            global player1_score
+            global player2_score
+            global players_names_associated_with_color
+            global pieces_on_the_board_objects
+            if who_won == "white":
+                if players_names_associated_with_color[player1] == "white":
+                    player1_score += 1
+                elif players_names_associated_with_color[player2] == "white":
+                    player2_score += 1
+            elif who_won == "black":
+                if players_names_associated_with_color[player1] == "black":
+                    player1_score += 1
+                elif players_names_associated_with_color[player2] == "black":
+                    player2_score += 1
+            global pieces_on_the_board_objects_simulation, piece_items_in_canvas, square_items_in_canvas, drag_data, black_pieces, white_pieces, squares_attacked_by_white_pieces, squares_attacked_by_black_pieces,\
+                previous_moves, list_of_situations_on_the_board, text_letters_canvas_items, text_numbers_canvas_items, who_is_on_bottom_of_the_board, turn, chosen_piece, make_moves, situation_of_white_king_global, \
+                situation_of_black_king_global, white_pieces_material, black_pieces_material, pieces_captured_by_black_pieces, pieces_captured_by_white_pieces, canvas_items_pieces_captured_by_black_pieces, \
+                canvas_items_pieces_captured_by_white_pieces
+            pieces_on_the_board_objects = [[None for _ in range(8)] for _ in range(8)]
+            pieces_on_the_board_objects_simulation = None
+            piece_items_in_canvas = [[None for _ in range(8)] for _ in range(8)]
+            square_items_in_canvas = [[None for _ in range(8)] for _ in range(8)]
+            drag_data = {"item": None, "x": None, "y": None, "startX": None, "startY": None, "rectangle": None}
+            black_pieces = []
+            white_pieces = []
+            squares_attacked_by_white_pieces = [[False for _ in range(8)] for _ in range(8)]
+            squares_attacked_by_black_pieces = [[False for _ in range(8)] for _ in range(8)]
+            previous_moves = []
+            list_of_situations_on_the_board = []
+            text_letters_canvas_items = [None, None, None, None, None, None, None, None]
+            text_numbers_canvas_items = [None, None, None, None, None, None, None, None]
+            who_is_on_bottom_of_the_board = "white"
+            turn = "white"
+            chosen_piece = None
+            make_moves = True
+            situation_of_white_king_global = None
+            situation_of_black_king_global = None
+            white_pieces_material = 0
+            black_pieces_material = 0
+            pieces_captured_by_black_pieces = []
+            pieces_captured_by_white_pieces = []
+            canvas_items_pieces_captured_by_black_pieces = []
+            canvas_items_pieces_captured_by_white_pieces = []
+            question_label.destroy()
+            button_play_again.destroy()
+            button_stop_playing.destroy()
+            win_label.destroy()
+            global chessLabel, score_label, materialLabelTop, canvas_material_top, boardLabels, canvas, materialLabelBottom, canvas_material_bottom,\
+                player_on_the_top_of_the_board_label, player_on_the_bottom_of_the_board_label, title_label
+            title_label = Label(window, text="Chess", font=('Impact', int(square_size * 1.5)), bg="#4a4a4a",
+                                fg="#ffffff")
+            title_label.pack()
+            player_on_the_top_of_the_board_label = Label(window, text=player1,
+                                                         font=("Oswald", int(square_size / 2)), bg="#4a4a4a",
+                                                         fg="#ffffff")
+            player_on_the_top_of_the_board_label.pack()
+            chessLabel = Label(window, bg="#4a4a4a")
+            chessLabel.pack(anchor="n")
+            score_label = Label(window, text="Score: " + player1 + ": " + str(player1_score) + " ; " + player2 + ": " + str(player2_score),
+                                font=("Impact", int(square_size / 2)), bg="#4a4a4a", fg="#ffffff")
+            score_label.place(x=int(square_size * 4), y=int(square_size * 1.66))
+            materialLabelTop = Label(chessLabel, bg="#4a4a4a", font=int(square_size * 0.75))
+            materialLabelTop.pack()
+            canvas_material_top = Canvas(materialLabelTop, height=square_size, bg="#4a4a4a", width=square_size * 9)
+            canvas_material_top.pack()
+            boardLabels = Label(chessLabel, bg="#4a4a4a")
+            boardLabels.pack()
+            canvas = Canvas(boardLabels, height=square_size * 9, width=square_size * 9)
+            canvas.pack()
+            materialLabelBottom = Label(chessLabel, text="Here black's captured pieces will be shown",
+                                        font=int(square_size * 0.75), bg="#4a4a4a")
+            materialLabelBottom.pack()
+            canvas_material_bottom = Canvas(materialLabelBottom, height=square_size, bg="#4a4a4a",
+                                            width=square_size * 9)
+            canvas_material_bottom.pack()
+            player_on_the_bottom_of_the_board_label = Label(window, text=player2,
+                                                            font=("Oswald", int(square_size / 2)), bg="#4a4a4a",
+                                                            fg="#ffffff")
+            player_on_the_bottom_of_the_board_label.pack()
+            if players_names_associated_with_color[player1] == "black":
+                players_names_associated_with_color[player1] = "white"
+                players_names_associated_with_color[player2] = "black"
+                player_on_the_bottom_of_the_board_label.config(text=player1)
+                player_on_the_top_of_the_board_label.config(text=player2)
+            elif players_names_associated_with_color[player1] == "white":
+                players_names_associated_with_color[player1] = "black"
+                players_names_associated_with_color[player2] = "white"
+                player_on_the_bottom_of_the_board_label.config(text=player2)
+                player_on_the_top_of_the_board_label.config(text=player1)
+
+            player_on_the_bottom_of_the_board_label.pack()
+            create_chess_board()
+            start_function()
+            list_of_situations_on_the_board.append(draw_situation_on_the_board())
+
+
+    question_label = Label(window, text="Do you want to play again?")
+    question_label.pack()
+    button_play_again = Button(window, text="Yes", command=want_to_play_again)
+    button_play_again.pack()
+    button_stop_playing = Button(window, text="No", command=do_not_want_to_play_again)
+    button_stop_playing.pack()
+
 canvas = Canvas(boardLabels, height=square_size * 9, width=square_size * 9)
 canvas.pack()
 create_chess_board()
@@ -1524,4 +1698,6 @@ materialLabelBottom = Label(chessLabel, text="Here black's captured pieces will 
 materialLabelBottom.pack()
 canvas_material_bottom = Canvas(materialLabelBottom, height=square_size, bg="#4a4a4a", width=square_size * 9)
 canvas_material_bottom.pack()
+player_on_the_bottom_of_the_board_label = Label(window, text=player1, font=("Oswald", int(square_size/2)), bg="#4a4a4a", fg="#ffffff")
+player_on_the_bottom_of_the_board_label.pack()
 window.mainloop()
