@@ -44,8 +44,121 @@ player2 = ""
 player1_score = 0
 player2_score = 0
 players_names_associated_with_color = {}
+white_pieces_position = 0
+black_pieces_position = 0
+pawns_position_evaluation_data = [[0,  0,  0,  0,  0,  0,  0,  0],[50, 50, 50, 50, 50, 50, 50, 50],[10, 10, 20, 30, 30, 20, 10, 10],[5,  5, 10, 25, 25, 10,  5,  5],[0,  0,  0, 20, 20,  0,  0,  0],[5, -5,-10,  0,  0,-10, -5,  5],[5, 10, 10,-20,-20, 10, 10,  5],[0,  0,  0,  0,  0,  0,  0,  0]]
+knights_position_evaluation_data = [[-50,-40,-30,-30,-30,-30,-40,-50],[-40,-20,  0,  0,  0,  0,-20,-40],[-30,  0, 10, 15, 15, 10,  0,-30],[-30,  5, 15, 20, 20, 15,  5,-30],[-30,  0, 15, 20, 20, 15,  0,-30],[-30,  5, 10, 15, 15, 10,  5,-30],[-40,-20,  0,  5,  5,  0,-20,-40],[-50,-40,-30,-30,-30,-30,-40,-50]]
+bishops_position_evaluation_data = [[-20,-10,-10,-10,-10,-10,-10,-20],[-10,  0,  0,  0,  0,  0,  0,-10],[-10,  0,  5, 10, 10,  5,  0,-10],[-10,  5,  5, 10, 10,  5,  5,-10],[-10,  0, 10, 10, 10, 10,  0,-10],[-10, 10, 10, 10, 10, 10, 10,-10],[-10,  5,  0,  0,  0,  0,  5,-10],[-20,-10,-10,-10,-10,-10,-10,-20]]
+rooks_position_evaluation_data = [[0,  0,  0,  0,  0,  0,  0,  0],[5, 10, 10, 10, 10, 10, 10,  5],[-5,  0,  0,  0,  0,  0,  0, -5],[-5,  0,  0,  0,  0,  0,  0, -5],[-5,  0,  0,  0,  0,  0,  0, -5],[-5,  0,  0,  0,  0,  0,  0, -5],[-5,  0,  0,  0,  0,  0,  0, -5],[0,  0,  0,  5,  5,  0,  0,  0]]
+queens_position_evaluation = [[-20,-10,-10, -5, -5,-10,-10,-20],[-10,  0,  0,  0,  0,  0,  0,-10],[-10,  0,  5,  5,  5,  5,  0,-10],[-5,  0,  5,  5,  5,  5,  0, -5],[0,  0,  5,  5,  5,  5,  0, -5],[-10,  5,  5,  5,  5,  5,  0,-10],[-10,  0,  5,  0,  0,  0,  0,-10],[-20,-10,-10, -5, -5,-10,-10,-20]]
+kings_position_evaluation = [[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-20,-30,-30,-40,-40,-30,-30,-20],[-10,-20,-20,-20,-20,-20,-20,-10],[20, 20,  0,  0,  0,  0, 20, 20],[20, 30, 10,  0,  0, 10, 30, 20]]
 
-
+def evaluate_chess_position(pieces_on_the_board_objects_data):
+    white_pieces_position = 0
+    black_pieces_position = 0
+    for i in range(8):
+        for j in range(8):
+            if pieces_on_the_board_objects_data[i][j] != None:
+                if pieces_on_the_board_objects_data[i][j].color == "white":
+                    if pieces_on_the_board_objects_data[i][j].type == "Pawn":
+                        white_pieces_position += 100 + pawns_position_evaluation_data[pieces_on_the_board_objects_data[i][j].x_L - 1][pieces_on_the_board_objects_data[i][j].y_N - 1]
+                    elif pieces_on_the_board_objects_data[i][j].type == "Knight":
+                        white_pieces_position += 320 + knights_position_evaluation_data[pieces_on_the_board_objects_data[i][j].x_L - 1][pieces_on_the_board_objects_data[i][j].y_N - 1]
+                    elif pieces_on_the_board_objects_data[i][j].type == "Bishop":
+                        white_pieces_position += 330 + bishops_position_evaluation_data[pieces_on_the_board_objects_data[i][j].x_L - 1][pieces_on_the_board_objects_data[i][j].y_N - 1]
+                    elif pieces_on_the_board_objects_data[i][j].type == "Rook":
+                        white_pieces_position += 500 + rooks_position_evaluation_data[pieces_on_the_board_objects_data[i][j].x_L - 1][pieces_on_the_board_objects_data[i][j].y_N - 1]
+                    elif pieces_on_the_board_objects_data[i][j].type == "Queen":
+                        white_pieces_position += 900 + queens_position_evaluation[pieces_on_the_board_objects_data[i][j].x_L - 1][pieces_on_the_board_objects_data[i][j].y_N - 1]
+                    elif pieces_on_the_board_objects_data[i][j].type == "King":
+                        white_pieces_position += 20000 + kings_position_evaluation[pieces_on_the_board_objects_data[i][j].x_L - 1][pieces_on_the_board_objects_data[i][j].y_N - 1]
+                elif pieces_on_the_board_objects_data[i][j].color == "black":
+                    if pieces_on_the_board_objects_data[i][j].type == "Pawn":
+                        black_pieces_position += 100 + pawns_position_evaluation_data[8 - pieces_on_the_board_objects_data[i][j].x_L][8 - pieces_on_the_board_objects_data[i][j].y_N]
+                    elif pieces_on_the_board_objects_data[i][j].type == "Knight":
+                        black_pieces_position += 320 + knights_position_evaluation_data[8 - pieces_on_the_board_objects_data[i][j].x_L][8 - pieces_on_the_board_objects_data[i][j].y_N]
+                    elif pieces_on_the_board_objects_data[i][j].type == "Bishop":
+                        black_pieces_position += 330 + bishops_position_evaluation_data[8 - pieces_on_the_board_objects_data[i][j].x_L][8 - pieces_on_the_board_objects_data[i][j].y_N]
+                    elif pieces_on_the_board_objects_data[i][j].type == "Rook":
+                        black_pieces_position += 500 + rooks_position_evaluation_data[8 - pieces_on_the_board_objects_data[i][j].x_L][8 - pieces_on_the_board_objects_data[i][j].y_N]
+                    elif pieces_on_the_board_objects_data[i][j].type == "Queen":
+                        black_pieces_position += 900 + queens_position_evaluation[8 - pieces_on_the_board_objects_data[i][j].x_L][8 - pieces_on_the_board_objects_data[i][j].y_N]
+                    elif pieces_on_the_board_objects_data[i][j].type == "King":
+                        black_pieces_position += 20000 + kings_position_evaluation[8 - pieces_on_the_board_objects_data[i][j].x_L][8 - pieces_on_the_board_objects_data[i][j].y_N]
+    evaluation_bar = white_pieces_position - black_pieces_position
+    return evaluation_bar
+def pick_the_best_move(color):
+    white_pieces_evaluate_the_best_move = []
+    black_pieces_evaluate_the_best_move = []
+    best_move = ""
+    global pieces_on_the_board_objects_simulation
+    for i in range(8):
+        for j in range(8):
+            if pieces_on_the_board_objects[i][j] != None:
+                if pieces_on_the_board_objects[i][j].color == "white":
+                    white_pieces_evaluate_the_best_move.append(pieces_on_the_board_objects[i][j])
+                elif pieces_on_the_board_objects[i][j].color == "black":
+                    black_pieces_evaluate_the_best_move.append(pieces_on_the_board_objects[i][j])
+    if color == "white":
+        best_situation_evaluation_white = evaluate_chess_position(pieces_on_the_board_objects)
+        best_position_white = []
+        for object in white_pieces_evaluate_the_best_move:
+            object.define_possible_moves(pieces_on_the_board_objects)
+        for object in white_pieces_evaluate_the_best_move:
+            for x,y in object.possible_moves:
+                do_not_interfere = False
+                pieces_on_the_board_objects_simulation = copy.deepcopy(pieces_on_the_board_objects)
+                if object.type == "Pawn":
+                    if object.enPassant == True and x == 1 or x == -1 and y == 1:
+                        pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 1] = pieces_on_the_board_objects_simulation[object.x_L - 1][object.y_N - 1]
+                        pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 1].x_L = object.x_L + x
+                        pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 1].y_N = object.y_N + y
+                        pieces_on_the_board_objects_simulation[object.x_L - 1][object.y_N - 1] = None
+                        pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 2] = None
+                        do_not_interfere = True
+                    else:
+                        pass
+                if do_not_interfere == False:
+                    pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 1] = pieces_on_the_board_objects_simulation[object.x_L - 1][object.y_N - 1]
+                    pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 1].x_L = object.x_L + x
+                    pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 1].y_N = object.y_N + y
+                    pieces_on_the_board_objects_simulation[object.x_L - 1][object.y_N - 1] = None
+                if evaluate_chess_position(pieces_on_the_board_objects_simulation) > best_situation_evaluation_white:
+                    best_move = object.type + " from " + letters[object.x_L - 1] + numbers[object.y_N - 1] + " to " + letters[object.x_L + x - 1] + numbers[object.y_N + y - 1]
+                    best_position_white = [object, x, y]
+                    best_situation_evaluation_white = evaluate_chess_position(pieces_on_the_board_objects_simulation)
+        print(best_move)
+        return best_position_white
+    elif color == "black":
+        best_situation_evaluation_black = evaluate_chess_position(pieces_on_the_board_objects)
+        best_position_black = []
+        for object in black_pieces_evaluate_the_best_move:
+            object.define_possible_moves(pieces_on_the_board_objects)
+        for object in black_pieces_evaluate_the_best_move:
+            for x, y in object.possible_moves:
+                do_not_interfere = False
+                pieces_on_the_board_objects_simulation = copy.deepcopy(pieces_on_the_board_objects)
+                if object.type == "Pawn":
+                    if object.enPassant == True and x == 1 or x == -1 and y == -1:
+                        pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 1] = pieces_on_the_board_objects_simulation[object.x_L - 1][object.y_N - 1]
+                        pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 1].x_L = object.x_L + x
+                        pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 1].y_N = object.y_N + y
+                        pieces_on_the_board_objects_simulation[object.x_L - 1][object.y_N - 1] = None
+                        pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y] = None
+                        do_not_interfere = True
+                    else:
+                        pass
+                if do_not_interfere == False:
+                    pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 1] = pieces_on_the_board_objects_simulation[object.x_L - 1][object.y_N - 1]
+                    pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 1].x_L = object.x_L + x
+                    pieces_on_the_board_objects_simulation[object.x_L + x - 1][object.y_N + y - 1].y_N = object.y_N + y
+                    pieces_on_the_board_objects_simulation[object.x_L - 1][object.y_N - 1] = None
+                if evaluate_chess_position(pieces_on_the_board_objects_simulation) < best_situation_evaluation_black:
+                    best_position_black = [object, x, y]
+                    best_situation_evaluation_black = evaluate_chess_position(pieces_on_the_board_objects_simulation)
+                    best_move = object.type + " from " + letters[8 - object.x_L] + numbers[object.y_N - 1] + " to " + letters [8 - (object.x_L + x)] + numbers[object.y_N + y - 1]
+        print(best_move)
+        return best_position_black
 def add_to_list_of_possible_moves_and_attacked_squares(x, y, deltaX, deltaY, pieces_on_the_board_objects_data):
     global squares_attacked_by_white_pieces
     global squares_attacked_by_black_pieces
@@ -1061,9 +1174,9 @@ class King():
                         else:
                             pass
                     if self.castling_kings_side == True:
-                        if (pieces_on_the_board_objects_data[self.x_L + 1 - 1][self.y_N - 1] is not None
-                                and pieces_on_the_board_objects_data[self.x_L + 2 - 1][self.y_N - 1] is not None):
-                            self.castling_kings_side = False
+                        if(pieces_on_the_board_objects_data[self.x_L + 1 - 1][self.y_N - 1] is not None
+                            or pieces_on_the_board_objects_data[self.x_L + 2 - 1][self.y_N - 1] is not None):
+                                self.castling_kings_side = False
                         else:
                             if self.color == "white":
                                 if (squares_attacked_by_black_pieces[self.x_L + 1 - 1][self.y_N - 1] is False
@@ -1086,8 +1199,8 @@ class King():
                             pass
                     if self.castling_queens_side == True:
                         if (pieces_on_the_board_objects_data[self.x_L - 1 - 1][self.y_N - 1] is not None
-                                and pieces_on_the_board_objects_data[self.x_L - 2 - 1][self.y_N - 1] is not None
-                                and pieces_on_the_board_objects_data[self.x_L - 3 - 1][self.y_N - 1] is not None):
+                                or pieces_on_the_board_objects_data[self.x_L - 2 - 1][self.y_N - 1] is not None
+                                or pieces_on_the_board_objects_data[self.x_L - 3 - 1][self.y_N - 1] is not None):
                             self.castling_queens_side = False
                         else:
                             if self.color == "white":
@@ -1688,7 +1801,6 @@ def want_to_play_again(who_won, player_who_won):
     button_play_again.pack()
     button_stop_playing = Button(window, text="No", command=do_not_want_to_play_again)
     button_stop_playing.pack()
-
 canvas = Canvas(boardLabels, height=square_size * 9, width=square_size * 9)
 canvas.pack()
 create_chess_board()
@@ -1700,4 +1812,14 @@ canvas_material_bottom = Canvas(materialLabelBottom, height=square_size, bg="#4a
 canvas_material_bottom.pack()
 player_on_the_bottom_of_the_board_label = Label(window, text=player1, font=("Oswald", int(square_size/2)), bg="#4a4a4a", fg="#ffffff")
 player_on_the_bottom_of_the_board_label.pack()
+give_the_advice = Label(window, bg="#4a4a4a")
+give_the_advice.place(x=int(square_size*21.17), y=int(square_size*5))
+give_an_advice_on_the_next_move_label = Label(give_the_advice, text="Click here if you want to receive an advice on the best move. (Keep in mind that data produced by this algorithm may be incorrect and or not accurate)",
+                         font=("Arial", 15), wraplength=600, fg="#ffffff", bg="#4a4a4a")
+give_an_advice_on_the_next_move_label.pack(anchor="n")
+give_an_advice_on_the_next_move_button = Button(give_the_advice, text="Give the advice", font=("Arial", 15), command=lambda: pick_the_best_move(who_is_on_bottom_of_the_board))
+give_an_advice_on_the_next_move_button.pack(anchor="n")
+
+button = Button(window, text="test", command=lambda: pick_the_best_move("white"))
+button.pack()
 window.mainloop()
