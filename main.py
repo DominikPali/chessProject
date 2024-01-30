@@ -2,7 +2,7 @@ import copy
 from tkinter import *
 import time
 letters = ["a", "b", "c", "d", "e", "f", "g", "h"]
-numbers = ["1", "2", "3", "4", "5", "6", '7', "8"]
+numbers = ["1", "2", "3", "4", "5", "6", "7", "8"]
 pieces_on_the_board_objects = [[None for _ in range(8)] for _ in range(8)]
 pieces_on_the_board_objects_simulation = None
 piece_items_in_canvas = [[None for _ in range(8)] for _ in range(8)]
